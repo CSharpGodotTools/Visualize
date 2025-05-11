@@ -36,16 +36,24 @@ public static class VisualUI
         Node node = visualData.Node;
 
         PanelContainer panelContainer = CreatePanelContainer(node.Name);
+        panelContainer.MouseFilter = MouseFilterEnum.Ignore;
         panelContainer.Name = "Main Panel";
 
         VBoxContainer mutableMembers = CreateColoredVBox(0.8f, 1, 0.8f);
+        mutableMembers.MouseFilter =  MouseFilterEnum.Ignore;
         mutableMembers.Name = "Mutable Members";
 
         VBoxContainer readonlyMembers = CreateColoredVBox(1.0f, 0.75f, 0.8f);
+        readonlyMembers.MouseFilter = MouseFilterEnum.Ignore;
         readonlyMembers.Name = "Readonly Members";
 
         // Readonly Members
         AddReadonlyControls(visualData.ReadonlyMembers, node, readonlyMembers, updateControls, spinBoxes);
+
+        foreach (Control control in readonlyMembers.GetChildren<Control>())
+        {
+            control.MouseFilter = MouseFilterEnum.Ignore;
+        }
 
         // Mutable Members
         AddMutableControls(mutableMembers, visualData.Properties, node, spinBoxes);
@@ -64,6 +72,7 @@ public static class VisualUI
         scrollContainer.HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled;
         scrollContainer.VerticalScrollMode = ScrollContainer.ScrollMode.ShowNever;
         scrollContainer.CustomMinimumSize = new Vector2(0, MIN_SCROLL_VIEW_SIZE);
+        scrollContainer.MouseFilter = MouseFilterEnum.Ignore;
 
         // Make them hidden by default
         //mutableMembers.Hide();
@@ -71,6 +80,7 @@ public static class VisualUI
 
         VBoxContainer titleBar = CreateTitleBar(node.Name, mutableMembers, readonlyMembers, visualData);
         titleBar.Name = "Main VBox";
+        titleBar.MouseFilter = MouseFilterEnum.Ignore;
         titleBar.AddChild(readonlyMembers);
         titleBar.AddChild(mutableMembers);
 
@@ -127,7 +137,8 @@ public static class VisualUI
         HBoxContainer hbox = new()
         {
             Name = "Title Bar",
-            Alignment = BoxContainer.AlignmentMode.Center
+            Alignment = BoxContainer.AlignmentMode.Center,
+            MouseFilter = MouseFilterEnum.Ignore
         };
 
         Label title = new()
@@ -151,7 +162,7 @@ public static class VisualUI
 
         if (visualData.ReadonlyMembers != null)
         {
-            readonlyBtn = CreateVisibilityButton(_eyeClosed, Colors.Pink);
+            readonlyBtn = CreateVisibilityButton(_eyeOpen, Colors.Pink);
             readonlyBtn.ButtonPressed = true;
             hbox.AddChild(readonlyBtn);
         }
