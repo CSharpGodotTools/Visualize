@@ -66,8 +66,8 @@ public static class VisualUI
         scrollContainer.CustomMinimumSize = new Vector2(0, MIN_SCROLL_VIEW_SIZE);
 
         // Make them hidden by default
-        mutableMembers.Hide();
-        readonlyMembers.Hide();
+        //mutableMembers.Hide();
+        //readonlyMembers.Hide();
 
         VBoxContainer titleBar = CreateTitleBar(node.Name, mutableMembers, readonlyMembers, visualData);
         titleBar.Name = "Main VBox";
@@ -134,7 +134,7 @@ public static class VisualUI
         {
             Name = "Title",
             Text = name,
-            Visible = false,
+            Visible = true,
             LabelSettings = new LabelSettings
             {
                 FontSize = 20,
@@ -152,12 +152,14 @@ public static class VisualUI
         if (visualData.ReadonlyMembers != null)
         {
             readonlyBtn = CreateVisibilityButton(_eyeClosed, Colors.Pink);
+            readonlyBtn.ButtonPressed = true;
             hbox.AddChild(readonlyBtn);
         }
 
         if (visualData.Properties.Any() || visualData.Fields.Any())
         {
             mutableBtn = CreateVisibilityButton(_wrench, Colors.Gray);
+            mutableBtn.ButtonPressed = true;
             hbox.AddChild(mutableBtn);
         }
 
