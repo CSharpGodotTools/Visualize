@@ -28,9 +28,9 @@ public static class VisualizeAttributeHandler
             readonlyMembers = attribute.VisualizeMembers;
         }
 
-        List<PropertyInfo> properties = GetVisualMembers(type.GetProperties);
-        List<FieldInfo> fields = GetVisualMembers(type.GetFields);
-        List<MethodInfo> methods = GetVisualMembers(type.GetMethods);
+        List<PropertyInfo> properties = GetVisualMembers<PropertyInfo>(type.GetProperties);
+        List<FieldInfo> fields = GetVisualMembers<FieldInfo>(type.GetFields);
+        List<MethodInfo> methods = GetVisualMembers<MethodInfo>(type.GetMethods);
 
         if (properties.Count != 0 || fields.Count != 0 || methods.Count != 0 || (attribute != null && attribute.VisualizeMembers != null))
         {
