@@ -10,9 +10,9 @@ public static partial class VisualControlTypes
 
         Vector3I vector3I = (Vector3I)context.InitialValue;
 
-        SpinBox spinBoxX = CreateSpinBox(typeof(int), null);
-        SpinBox spinBoxY = CreateSpinBox(typeof(int), null);
-        SpinBox spinBoxZ = CreateSpinBox(typeof(int), null);
+        SpinBox spinBoxX = CreateSpinBox(typeof(int));
+        SpinBox spinBoxY = CreateSpinBox(typeof(int));
+        SpinBox spinBoxZ = CreateSpinBox(typeof(int));
 
         spinBoxX.Value = vector3I.X;
         spinBoxY.Value = vector3I.Y;

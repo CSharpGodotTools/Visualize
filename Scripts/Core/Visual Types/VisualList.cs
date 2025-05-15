@@ -54,9 +54,10 @@ public static partial class VisualControlTypes
         {
             object value = list[i];
 
+            int i1 = i;
             VisualControlInfo control = CreateControlForType(elementType, null, new VisualControlContext(context.SpinBoxes, value, v =>
             {
-                list[i] = v;
+                list[i1] = v;
                 context.ValueChanged(list);
             }));
 

@@ -14,6 +14,43 @@ public static partial class VisualControlTypes
         Type elementType = type.GetElementType();
         Array array = context.InitialValue as Array ?? Array.CreateInstance(elementType, 0);
 
+        for (int i = 0; i < array.Length; i++)
+        {
+            object value = array.GetValue(i);
+
+            int i1 = i;
+            VisualControlInfo control = CreateControlForType(elementType, null, new VisualControlContext(context.SpinBoxes, value, v =>
+            {
+                array.SetValue(v, i1);
+                context.ValueChanged(array);
+            }));
+
+            if (control.VisualControl == null)
+                continue;
+
+            SetControlValue(control.VisualControl.Control, value);
+
+            Button minusButton = new() { Text = "-" };
+            HBoxContainer hbox = new();
+
+            minusButton.Pressed += () =>
+            {
+                int indexToRemove = minusButton.GetParent().GetIndex();
+                arrayVBox.RemoveChild(hbox);
+                array = array.RemoveAt(indexToRemove);
+                context.ValueChanged(array);
+            };
+
+            hbox.AddChild(control.VisualControl.Control);
+            hbox.AddChild(minusButton);
+            arrayVBox.AddChild(hbox);
+        }
+
+        addButton.Pressed += AddNewEntryToArray;
+        arrayVBox.AddChild(addButton);
+
+        return new VisualControlInfo(new VBoxContainerControl(arrayVBox));
+
         void AddNewEntryToArray()
         {
             Array newArray = Array.CreateInstance(elementType, array.Length + 1);
@@ -49,42 +86,6 @@ public static partial class VisualControlTypes
                 arrayVBox.MoveChild(addButton, arrayVBox.GetChildCount() - 1);
             }
         }
-
-        for (int i = 0; i < array.Length; i++)
-        {
-            object value = array.GetValue(i);
-
-            VisualControlInfo control = CreateControlForType(elementType, null, new VisualControlContext(context.SpinBoxes, value, v =>
-            {
-                array.SetValue(v, i);
-                context.ValueChanged(array);
-            }));
-
-            if (control.VisualControl != null)
-            {
-                SetControlValue(control.VisualControl.Control, value);
-
-                Button minusButton = new() { Text = "-" };
-                HBoxContainer hbox = new();
-
-                minusButton.Pressed += () =>
-                {
-                    int indexToRemove = minusButton.GetParent().GetIndex();
-                    arrayVBox.RemoveChild(hbox);
-                    array = array.RemoveAt(indexToRemove);
-                    context.ValueChanged(array);
-                };
-
-                hbox.AddChild(control.VisualControl.Control);
-                hbox.AddChild(minusButton);
-                arrayVBox.AddChild(hbox);
-            }
-        }
-
-        addButton.Pressed += AddNewEntryToArray;
-        arrayVBox.AddChild(addButton);
-
-        return new VisualControlInfo(new VBoxContainerControl(arrayVBox));
     }
 }
 

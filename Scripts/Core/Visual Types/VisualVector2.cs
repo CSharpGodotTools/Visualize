@@ -10,8 +10,8 @@ public static partial class VisualControlTypes
 
         Vector2 vector2 = (Vector2)context.InitialValue;
 
-        SpinBox spinBoxX = CreateSpinBox(typeof(float), null);
-        SpinBox spinBoxY = CreateSpinBox(typeof(float), null);
+        SpinBox spinBoxX = CreateSpinBox(typeof(float));
+        SpinBox spinBoxY = CreateSpinBox(typeof(float));
 
         spinBoxX.Value = vector2.X;
         spinBoxY.Value = vector2.Y;

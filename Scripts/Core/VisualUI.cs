@@ -224,7 +224,7 @@ public static class VisualUI
     {
         return new VBoxContainer
         {
-            Modulate = new Color(r, g, b, 1)
+            Modulate = new Color(r, g, b)
         };
     }
     
@@ -381,7 +381,7 @@ public static class VisualUI
 
         MemberInfo member = property != null ? property : field;
 
-        VisualControlContext context = new(spinBoxes, initialValue, v =>
+        VisualControlContext context = new(spinBoxes, initialValue, _ =>
         {
             // Do nothing
         });
@@ -442,15 +442,15 @@ public static class VisualUI
             VisualHandler.SetMemberValue(member, node, v);
         }));
 
-        Control container = null;
-        Label label = null;
+        Control container;
+        Label label;
 
         if (element.VisualControl is ClassControl)
         {
             container = new VBoxContainer();
-            label = new()
+            label = new Label
             {
-                LabelSettings = new LabelSettings()
+                LabelSettings = new LabelSettings
                 {
                     FontSize = 18,
                     OutlineSize = 6,
@@ -461,18 +461,18 @@ public static class VisualUI
         else
         {
             container = new HBoxContainer();
-            label = new();
+            label = new Label();
         }
 
         label.Text = member.Name.ToPascalCase().AddSpaceBeforeEachCapital();
         label.HorizontalAlignment = HorizontalAlignment.Center;
         container.Name = member.Name;
 
-        if (element.VisualControl != null)
-        {
-            container.AddChild(label);
-            container.AddChild(element.VisualControl.Control);
-        }
+        if (element.VisualControl == null)
+            return container;
+
+        container.AddChild(label);
+        container.AddChild(element.VisualControl.Control);
 
         return container;
     }

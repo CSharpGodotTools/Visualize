@@ -27,7 +27,7 @@ public static partial class VisualControlTypes
         }
         else
         {
-            control = CreateSpinBox(type, memberInfo);
+            control = CreateSpinBox(type);
         }
 
         control.Value = Convert.ToDouble(context.InitialValue);

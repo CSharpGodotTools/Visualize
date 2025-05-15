@@ -10,10 +10,10 @@ public static partial class VisualControlTypes
 
         Vector4 vector4 = (Vector4)context.InitialValue;
 
-        SpinBox spinBoxX = CreateSpinBox(typeof(float), null);
-        SpinBox spinBoxY = CreateSpinBox(typeof(float), null);
-        SpinBox spinBoxZ = CreateSpinBox(typeof(float), null);
-        SpinBox spinBoxW = CreateSpinBox(typeof(float), null);
+        SpinBox spinBoxX = CreateSpinBox(typeof(float));
+        SpinBox spinBoxY = CreateSpinBox(typeof(float));
+        SpinBox spinBoxZ = CreateSpinBox(typeof(float));
+        SpinBox spinBoxW = CreateSpinBox(typeof(float));
 
         spinBoxX.Value = vector4.X;
         spinBoxY.Value = vector4.Y;

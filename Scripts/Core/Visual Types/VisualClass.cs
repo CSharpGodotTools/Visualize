@@ -163,8 +163,6 @@ public class ClassControl(VBoxContainer vboxContainer, List<IVisualControl> visu
 {
     public void SetValue(object value)
     {
-        Type type = value.GetType();
-
         for (int i = 0; i < properties.Length; i++)
         {
             object propValue = properties[i].GetValue(value);

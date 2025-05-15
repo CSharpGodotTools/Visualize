@@ -1,7 +1,5 @@
 ﻿using Godot;
-using GodotUtils;
 using System;
-using System.Reflection;
 
 namespace Template;
 
@@ -12,31 +10,25 @@ public static partial class VisualControlTypes
 {
     private static void SetControlValue(Control control, object value)
     {
-        if (control is ColorPickerButton colorPickerButton)
+        switch (control)
         {
-            colorPickerButton.Color = (Color)value;
+            case ColorPickerButton colorPickerButton:
+                colorPickerButton.Color = (Color)value;
+                break;
+            case LineEdit lineEdit:
+                lineEdit.Text = (string)value;
+                break;
+            case SpinBox spinBox:
+                spinBox.Value = Convert.ToDouble(value);
+                break;
+            case CheckBox checkBox:
+                checkBox.ButtonPressed = (bool)value;
+                break;
+            case OptionButton optionButton:
+                optionButton.Select((int)value);
+                break;
+            // Add more control types here as needed
         }
-        else if (control is LineEdit lineEdit)
-        {
-            lineEdit.Text = (string)value;
-        }
-        else if (control is SpinBox spinBox)
-        {
-            spinBox.Value = Convert.ToDouble(value);
-        }
-        else if (control is CheckBox checkBox)
-        {
-            checkBox.ButtonPressed = (bool)value;
-        }
-        else if (control is OptionButton optionButton)
-        {
-            optionButton.Select((int)value);
-        }
-        else if (control is ColorPickerButton colorPicker)
-        {
-            colorPicker.Color = (Color)value;
-        }
-        // Add more control types here as needed
     }
 
     // Helper method to remove an element from an array
@@ -56,9 +48,10 @@ public static partial class VisualControlTypes
         return dest;
     }
 
+/*
     private static object ConvertNumericValue(SpinBox spinBox, double value, Type paramType)
     {
-        object convertedValue = value;
+        object convertedValue;
 
         try
         {
@@ -66,17 +59,17 @@ public static partial class VisualControlTypes
         }
         catch
         {
-            (object Min, object Max) = TypeRangeConstraints.GetRange(paramType);
+            (object min, object max) = TypeRangeConstraints.GetRange(paramType);
 
-            if (Convert.ToDouble(value) < Convert.ToDouble(Min))
+            if (Convert.ToDouble(value) < Convert.ToDouble(min))
             {
-                spinBox.Value = Convert.ToDouble(Min);
-                convertedValue = Min;
+                spinBox.Value = Convert.ToDouble(min);
+                convertedValue = min;
             }
-            else if (Convert.ToDouble(value) > Convert.ToDouble(Max))
+            else if (Convert.ToDouble(value) > Convert.ToDouble(max))
             {
-                spinBox.Value = Convert.ToDouble(Max);
-                convertedValue = Max;
+                spinBox.Value = Convert.ToDouble(max);
+                convertedValue = max;
             }
             else
             {
@@ -87,8 +80,9 @@ public static partial class VisualControlTypes
 
         return convertedValue;
     }
+*/
 
-    private static SpinBox CreateSpinBox(Type type, MemberInfo memberInfo)
+    private static SpinBox CreateSpinBox(Type type)
     {
         SpinBox spinBox = new()
         {
