@@ -13,7 +13,7 @@ namespace GodotUtils.Debugging;
 /// <summary>
 /// The main core class for the visualizer UI
 /// </summary>
-public static class VisualUI
+internal static class VisualUI
 {
     public const float VisualUiScaleFactor = 0.6f;
 

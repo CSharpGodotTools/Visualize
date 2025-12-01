@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace GodotUtils.Debugging;
 
-public static partial class VisualControlTypes
+internal static partial class VisualControlTypes
 {
     private static VisualControlInfo VisualClass(Type type, VisualControlContext context)
     {
@@ -191,7 +191,7 @@ public static partial class VisualControlTypes
     }
 }
 
-public class ClassControl(Control container, List<IVisualControl> visualPropertyControls, List<IVisualControl> visualFieldControls, PropertyInfo[] properties, FieldInfo[] fields) : IVisualControl
+internal class ClassControl(Control container, List<IVisualControl> visualPropertyControls, List<IVisualControl> visualFieldControls, PropertyInfo[] properties, FieldInfo[] fields) : IVisualControl
 {
     public void SetValue(object value)
     {

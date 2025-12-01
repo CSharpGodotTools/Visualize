@@ -3,7 +3,7 @@ using Godot;
 
 namespace GodotUtils.Debugging;
 
-public static partial class VisualControlTypes
+internal static partial class VisualControlTypes
 {
     private static VisualControlInfo VisualBool(VisualControlContext context)
     {
@@ -14,7 +14,7 @@ public static partial class VisualControlTypes
     }
 }
 
-public class BoolControl(CheckBox checkBox) : IVisualControl
+internal class BoolControl(CheckBox checkBox) : IVisualControl
 {
     public void SetValue(object value)
     {

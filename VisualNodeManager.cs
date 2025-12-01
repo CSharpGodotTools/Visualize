@@ -1,11 +1,11 @@
-﻿using Godot;
+using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace GodotUtils.Debugging;
 
-public class VisualNodeManager
+internal class VisualNodeManager
 {
     private static readonly Vector2 DefaultOffset = new(100, 100);
     private Dictionary<ulong, VisualNodeInfo> _nodeTrackers = [];

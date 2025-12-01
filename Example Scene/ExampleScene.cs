@@ -3,7 +3,7 @@ using Godot;
 
 namespace GodotUtils.Debugging;
 
-public partial class ExampleScene : Node
+internal partial class ExampleScene : Node
 {
     [Export] private int _cameraSpeed = 5;
     [Export] private PackedScene _spriteExampleScene;
@@ -22,7 +22,7 @@ public partial class ExampleScene : Node
             .Callback(() =>
             {
                 AddChild(sprite);
-                sprite.GlobalPosition = new Vector2(200, 100);
+                sprite.GlobalPosition = new Vector2(0, 0);
             });
     }
 

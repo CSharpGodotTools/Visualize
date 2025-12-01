@@ -7,7 +7,7 @@ namespace GodotUtils.Debugging;
 /// <summary>
 /// More utility methods
 /// </summary>
-public static partial class VisualControlTypes
+internal static partial class VisualControlTypes
 {
     private static void SetControlValue(Control control, object value)
     {

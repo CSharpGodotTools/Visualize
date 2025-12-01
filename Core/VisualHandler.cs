@@ -8,7 +8,7 @@ namespace GodotUtils.Debugging;
 /// <summary>
 /// A set of utility methods for handling the VisualizeAttribute
 /// </summary>
-public static class VisualHandler
+internal static class VisualHandler
 {
     public static void SetMemberValue(MemberInfo member, object target, object value)
     {

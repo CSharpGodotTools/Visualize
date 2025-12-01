@@ -3,7 +3,7 @@ using Godot;
 
 namespace GodotUtils.Debugging;
 
-public static partial class VisualControlTypes
+internal static partial class VisualControlTypes
 {
     private static VisualControlInfo VisualQuaternion(VisualControlContext context)
     {
@@ -58,7 +58,7 @@ public static partial class VisualControlTypes
     }
 }
 
-public class QuaternionControl(HBoxContainer quaternionHBox, SpinBox spinBoxX, SpinBox spinBoxY, SpinBox spinBoxZ, SpinBox spinBoxW) : IVisualControl
+internal class QuaternionControl(HBoxContainer quaternionHBox, SpinBox spinBoxX, SpinBox spinBoxY, SpinBox spinBoxZ, SpinBox spinBoxW) : IVisualControl
 {
     public void SetValue(object value)
     {

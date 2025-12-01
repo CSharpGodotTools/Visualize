@@ -3,7 +3,7 @@ using Godot;
 
 namespace GodotUtils.Debugging;
 
-public static partial class VisualControlTypes
+internal static partial class VisualControlTypes
 {
     private static VisualControlInfo VisualNodePath(VisualControlContext context)
     {

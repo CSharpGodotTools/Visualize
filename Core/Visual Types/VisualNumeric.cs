@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace GodotUtils.Debugging;
 
-public static partial class VisualControlTypes
+internal static partial class VisualControlTypes
 {
     private const double DEFAULT_STEP_VALUE = 0.005;
 
@@ -82,7 +82,7 @@ public static partial class VisualControlTypes
     }
 }
 
-public class NumericControl(SpinBox spinBox) : IVisualControl
+internal class NumericControl(SpinBox spinBox) : IVisualControl
 {
     public void SetValue(object value)
     {

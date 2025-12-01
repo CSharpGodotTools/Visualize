@@ -12,7 +12,7 @@ public class VisualizeAutoload : IDisposable
     public static VisualizeAutoload Instance { get; private set; }
     public Dictionary<Node, VBoxContainer> VisualNodesWithoutVisualAttribute { get; private set; } = [];
 
-    private Visualize _visualize;
+    private readonly Visualize _visualize;
 
     public VisualizeAutoload()
     {
@@ -34,7 +34,7 @@ public class VisualizeAutoload : IDisposable
     }
 }
 
-public class VisualNodeInfo(List<Action> actions, Control visualControl, Node node, Vector2 offset)
+internal class VisualNodeInfo(List<Action> actions, Control visualControl, Node node, Vector2 offset)
 {
     public List<Action> Actions { get; } = actions ?? throw new ArgumentNullException(nameof(actions));
     public Control VisualControl { get; } = visualControl ?? throw new ArgumentNullException(nameof(visualControl));

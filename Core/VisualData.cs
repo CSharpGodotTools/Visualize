@@ -9,7 +9,7 @@ namespace GodotUtils.Debugging;
 /// <summary>
 /// Represents a node to be visualized
 /// </summary>
-public class VisualData(Node node, IEnumerable<PropertyInfo> properties, IEnumerable<FieldInfo> fields, IEnumerable<MethodInfo> methods)
+internal class VisualData(Node node, IEnumerable<PropertyInfo> properties, IEnumerable<FieldInfo> fields, IEnumerable<MethodInfo> methods)
 {
     public Node Node { get; } = node;
     public IEnumerable<PropertyInfo> Properties { get; } = properties;
@@ -17,7 +17,7 @@ public class VisualData(Node node, IEnumerable<PropertyInfo> properties, IEnumer
     public IEnumerable<MethodInfo> Methods { get; } = methods;
 }
 
-public class VisualSpinBox
+internal class VisualSpinBox
 {
     public SpinBox SpinBox { get; set; }
     public Type Type { get; set; }

@@ -7,7 +7,7 @@ namespace GodotUtils.Debugging;
 /// <summary>
 /// Utility class for converting provided values to method parameters
 /// </summary>
-public static class ParameterConverter
+internal static class ParameterConverter
 {
     public static object[] ConvertParameterInfoToObjectArray(ParameterInfo[] paramInfos, object[] providedValues)
     {

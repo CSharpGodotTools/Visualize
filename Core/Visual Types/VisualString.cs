@@ -3,7 +3,7 @@ using Godot;
 
 namespace GodotUtils.Debugging;
 
-public static partial class VisualControlTypes
+internal static partial class VisualControlTypes
 {
     private static VisualControlInfo VisualString(VisualControlContext context)
     {
@@ -14,7 +14,7 @@ public static partial class VisualControlTypes
     }
 }
 
-public class LineEditControl(LineEdit lineEdit) : IVisualControl
+internal class LineEditControl(LineEdit lineEdit) : IVisualControl
 {
     public void SetValue(object value)
     {

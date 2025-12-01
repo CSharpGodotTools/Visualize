@@ -10,7 +10,7 @@ namespace GodotUtils.Debugging;
 /// <summary>
 /// Methods that can be executed manually by pressing a button in-game. Parameters are supported.
 /// </summary>
-public static class VisualMethods
+internal static class VisualMethods
 {
     /// <summary>
     /// Creates the UI needed for the method parameters

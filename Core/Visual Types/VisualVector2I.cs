@@ -3,7 +3,7 @@ using Godot;
 
 namespace GodotUtils.Debugging;
 
-public static partial class VisualControlTypes
+internal static partial class VisualControlTypes
 {
     private static VisualControlInfo VisualVector2I(VisualControlContext context)
     {
@@ -37,7 +37,7 @@ public static partial class VisualControlTypes
         return new VisualControlInfo(new Vector2IControl(vector2IHBox, spinBoxX, spinBoxY));
     }
 
-    public class Vector2IControl(HBoxContainer vector2IHBox, SpinBox spinBoxX, SpinBox spinBoxY) : IVisualControl
+    internal class Vector2IControl(HBoxContainer vector2IHBox, SpinBox spinBoxX, SpinBox spinBoxY) : IVisualControl
     {
         public void SetValue(object value)
         {

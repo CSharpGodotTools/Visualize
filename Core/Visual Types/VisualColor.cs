@@ -3,7 +3,7 @@ using Godot;
 
 namespace GodotUtils.Debugging;
 
-public static partial class VisualControlTypes
+internal static partial class VisualControlTypes
 {
     private static VisualControlInfo VisualColor(VisualControlContext context)
     {
@@ -16,7 +16,7 @@ public static partial class VisualControlTypes
     }
 }
 
-public class ColorPickerButtonControl(ColorPickerButton colorPickerButton) : IVisualControl
+internal class ColorPickerButtonControl(ColorPickerButton colorPickerButton) : IVisualControl
 {
     public void SetValue(object value)
     {

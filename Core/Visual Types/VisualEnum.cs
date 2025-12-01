@@ -4,7 +4,7 @@ using System;
 
 namespace GodotUtils.Debugging;
 
-public static partial class VisualControlTypes
+internal static partial class VisualControlTypes
 {
     private static VisualControlInfo VisualEnum(Type type, VisualControlContext context)
     {
@@ -40,7 +40,7 @@ public static partial class VisualControlTypes
     }
 }
 
-public class OptionButtonEnumControl(OptionButton optionButton, Action<object> select) : IVisualControl
+internal class OptionButtonEnumControl(OptionButton optionButton, Action<object> select) : IVisualControl
 {
     public Control Control => optionButton;
 

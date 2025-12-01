@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace GodotUtils.Debugging;
 
-public static partial class VisualControlTypes
+internal static partial class VisualControlTypes
 {
     /// <summary>
     /// Creates a control for the given member type and context
@@ -58,14 +58,14 @@ public static partial class VisualControlTypes
     }
 }
 
-public interface IVisualControl
+internal interface IVisualControl
 {
     void SetValue(object value);
     Control Control { get; }
     void SetEditable(bool editable);
 }
 
-public class VisualControlInfo(IVisualControl visualControl)
+internal class VisualControlInfo(IVisualControl visualControl)
 {
     public IVisualControl VisualControl { get; } = visualControl;
 }

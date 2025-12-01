@@ -10,7 +10,7 @@ namespace GodotUtils.Debugging;
 /// <summary>
 /// Handles the VisualizeAttribute
 /// </summary>
-public static class VisualizeAttributeHandler
+internal static class VisualizeAttributeHandler
 {
     private static readonly BindingFlags _flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
 

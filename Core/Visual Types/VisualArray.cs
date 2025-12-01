@@ -5,7 +5,7 @@ using static Godot.Control;
 
 namespace GodotUtils.Debugging;
 
-public static partial class VisualControlTypes
+internal static partial class VisualControlTypes
 {
     private static VisualControlInfo VisualArray(Type type, VisualControlContext context)
     {
@@ -90,7 +90,7 @@ public static partial class VisualControlTypes
     }
 }
 
-public class VBoxContainerControl(VBoxContainer vboxContainer) : IVisualControl
+internal class VBoxContainerControl(VBoxContainer vboxContainer) : IVisualControl
 {
     public void SetValue(object value)
     {

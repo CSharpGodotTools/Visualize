@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace GodotUtils.Debugging;
 
-public partial class VisualizeExampleSprite : Sprite2D
+internal partial class VisualizeExampleSprite : Sprite2D
 {
     [Visualize] private float   _rotation;
     [Visualize] private Color   _color = Colors.White;

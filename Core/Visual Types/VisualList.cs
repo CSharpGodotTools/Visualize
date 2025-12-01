@@ -7,7 +7,7 @@ using static Godot.Control;
 
 namespace GodotUtils.Debugging;
 
-public static partial class VisualControlTypes
+internal static partial class VisualControlTypes
 {
     private static VisualControlInfo VisualList(Type type, VisualControlContext context)
     {
