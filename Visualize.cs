@@ -12,7 +12,7 @@ namespace GodotUtils.Debugging;
 public class Visualize
 {
     private const int MaxLabelsVisible = 5;
-    private static VisualNodeManager _visualNodeManager = new();
+    private static readonly VisualNodeManager _visualNodeManager = new();
 
     public static void Register(Node node, params string[] readonlyMembers)
     {
