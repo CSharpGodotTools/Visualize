@@ -6,7 +6,7 @@ internal partial class Autoload : Node
 {
     private VisualizeAutoload _visualizeAutoload;
 
-    public override void _Ready()
+    public override void _EnterTree()
     {
         _visualizeAutoload = new VisualizeAutoload();
     }

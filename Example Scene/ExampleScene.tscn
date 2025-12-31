@@ -68,3 +68,6 @@ theme_override_font_sizes/font_size = 8
 text = "World Center"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Sprite2D" parent="." instance=ExtResource("2_6hp5q")]
+position = Vector2(261, -147)

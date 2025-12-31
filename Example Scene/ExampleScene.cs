@@ -14,7 +14,7 @@ internal partial class ExampleScene : Node
     {
         _camera = GetNode<Camera2D>("Camera2D");
 
-        VisualizeExampleSprite sprite = _spriteExampleScene.Instantiate<VisualizeExampleSprite>();
+        //VisualizeExampleSprite sprite = _spriteExampleScene.Instantiate<VisualizeExampleSprite>();
 
         // As you can see the visualize info is created at the moment of node creation
         //_ = new NodeTween(this)
@@ -25,7 +25,7 @@ internal partial class ExampleScene : Node
         //        sprite.GlobalPosition = new Vector2(0, 0);
         //    });
         
-        AddChild(sprite);
+        //AddChild(sprite);
     }
 
     public override void _PhysicsProcess(double delta)
