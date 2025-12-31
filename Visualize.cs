@@ -60,9 +60,8 @@ public class Visualize
         if (vbox.GetChildCount() > MaxLabelsVisible)
             vbox.RemoveChild(vbox.GetChild(vbox.GetChildCount() - 1));
 
-        _ = new GodotTween(label)
-            .SetAnimatingProp(CanvasItem.PropertyName.Modulate)
-            .AnimateProp(Colors.Transparent, fadeTime)
+        _ = new NodeTweenControl(label)
+            .AnimateColorRecursive(Colors.Transparent, fadeTime)
             .Callback(label.QueueFree);
     }
 }

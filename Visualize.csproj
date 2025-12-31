@@ -1,19 +1,38 @@
-<Project Sdk="Godot.NET.Sdk/4.5.1">
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
-    <EnableDynamicLoading>true</EnableDynamicLoading>
-	<OutputPath>$(SolutionDir)bin\</OutputPath>
-  </PropertyGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="ENet-CSharp" Version="2.4.8" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-	<PackageReference Include="ImGui.NET" Version="1.91.6.1" />
-	<PackageReference Include="GodotSharp.SourceGenerators" Version="2.4.0" />
+﻿<Project Sdk="Godot.NET.Sdk/4.5.1">
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
+		<EnableDynamicLoading>true</EnableDynamicLoading>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<!-- CS1591: Ignore missing XML comment warnings -->
+		<!-- IDE0130: Ignore invalid namespace name warnings -->
+		<NoWarn>CS1591;IDE0130</NoWarn>
+	</PropertyGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="EyeClosed.png" />
+	  <EmbeddedResource Include="EyeOpen.png" />
+	  <EmbeddedResource Include="Wrench.png" />
+	</ItemGroup>
 
-	<Reference Include="GodotUtils">
-		<HintPath>GodotUtils.dll</HintPath>
-	</Reference>
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="ENet-CSharp" Version="2.4.8" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+		<PackageReference Include="ImGui.NET" Version="1.91.6.1" />
+		<PackageReference Include="GodotSharp.SourceGenerators" Version="2.4.0" />
+
+		<Reference Include="GodotUtils">
+			<HintPath>addons/GodotUtils.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(EnableGodotUtilsPostBuild)' == 'true'">
+
+		<ItemGroup>
+			<GodotTargets Include="$(GodotProject1);$(GodotProject2);$(GodotProject3)" />
+		</ItemGroup>
+
+		<Exec Command="&#xA;			copy /Y &quot;$(TargetDir)Visualize.dll&quot; &quot;%(GodotTargets.Identity)\addons\Visualize.dll&quot;&#xA;			copy /Y &quot;$(TargetDir)Visualize.xml&quot; &quot;%(GodotTargets.Identity)\addons\Visualize.xml&quot;&#xA;			" />
+	</Target>
 </Project>

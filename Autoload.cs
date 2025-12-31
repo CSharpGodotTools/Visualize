@@ -1,9 +1,10 @@
 using Godot;
-using GodotUtils.Debugging;
+
+namespace GodotUtils.Debugging;
 
 internal partial class Autoload : Node
 {
-    VisualizeAutoload _visualizeAutoload;
+    private VisualizeAutoload _visualizeAutoload;
 
     public override void _Ready()
     {

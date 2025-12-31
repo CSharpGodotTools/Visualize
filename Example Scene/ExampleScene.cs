@@ -17,13 +17,15 @@ internal partial class ExampleScene : Node
         VisualizeExampleSprite sprite = _spriteExampleScene.Instantiate<VisualizeExampleSprite>();
 
         // As you can see the visualize info is created at the moment of node creation
-        _ = new GodotTween(this)
-            .Delay(1)
-            .Callback(() =>
-            {
-                AddChild(sprite);
-                sprite.GlobalPosition = new Vector2(0, 0);
-            });
+        //_ = new NodeTween(this)
+        //    .Delay(1)
+        //    .Callback(() =>
+        //    {
+        //        AddChild(sprite);
+        //        sprite.GlobalPosition = new Vector2(0, 0);
+        //    });
+        
+        AddChild(sprite);
     }
 
     public override void _PhysicsProcess(double delta)

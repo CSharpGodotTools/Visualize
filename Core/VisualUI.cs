@@ -2,11 +2,12 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Threading.Tasks;
-using System.Threading;
-using static Godot.Control;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using static Godot.Control;
 
 namespace GodotUtils.Debugging;
 
@@ -17,7 +18,6 @@ internal static class VisualUI
 {
     public const float VisualUiScaleFactor = 0.6f;
 
-    private const string PathIcons = "res://Icons/";
     private const double ReleaseFocusOnPressDelay = 0.1;
     private const float PanelScaleFactor = 0.9f;
     private const int MinScrollViewDistance = 350;
@@ -27,11 +27,34 @@ internal static class VisualUI
     private const int MinButtonSize = 25;
     private const int MaxSecondsToWaitForInitialValues = 3;
 
-    private static Texture2D _eyeOpen = GD.Load<Texture2D>($"{PathIcons}/EyeOpen.png");
-    private static Texture2D _eyeClosed = GD.Load<Texture2D>($"{PathIcons}/EyeClosed.png");
-    private static Texture2D _wrench = GD.Load<Texture2D>($"{PathIcons}/Wrench.png");
+    private static readonly Texture2D _eyeOpen = LoadEmbeddedTexture("Visualize.EyeOpen.png");
+    private static readonly Texture2D _eyeClosed = LoadEmbeddedTexture("Visualize.EyeClosed.png");
+    private static readonly Texture2D _wrench = LoadEmbeddedTexture("Visualize.Wrench.png");
+
     private static Color Green = new(0.8f, 1, 0.8f);
     private static Color Pink = new(1.0f, 0.75f, 0.8f);
+
+    /// <summary>
+    /// Loads a PNG image embedded in the assembly as a resource and converts it into an ImageTexture.
+    /// The <paramref name="resourceName"/> must be the fully qualified path including the namespace 
+    /// and folders, for example "Visualize.Icons.EyeOpen.png".
+    /// </summary>
+    private static ImageTexture LoadEmbeddedTexture(string resourceName)
+    {
+        Assembly assembly = typeof(VisualUI).Assembly;
+
+        using Stream stream = assembly.GetManifestResourceStream(resourceName) ?? 
+            throw new InvalidOperationException($"Embedded resource not found: {resourceName}");
+
+        using MemoryStream ms = new();
+        stream.CopyTo(ms);
+        byte[] bytes = ms.ToArray();
+
+        Image image = new();
+        image.LoadPngFromBuffer(bytes);
+
+        return ImageTexture.CreateFromImage(image);
+    }
 
     /// <summary>
     /// Creates the visual panel for a specified visual node.
@@ -76,10 +99,12 @@ internal static class VisualUI
 
         visualNodes.Add(node, vboxLogs);
 
-        ScrollContainer scrollContainer = new();
-        scrollContainer.HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled;
-        scrollContainer.VerticalScrollMode = ScrollContainer.ScrollMode.ShowNever;
-        scrollContainer.CustomMinimumSize = new Vector2(0, MinScrollViewDistance);
+        ScrollContainer scrollContainer = new()
+        {
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            VerticalScrollMode = ScrollContainer.ScrollMode.ShowNever,
+            CustomMinimumSize = new Vector2(0, MinScrollViewDistance)
+        };
 
         // Make them hidden by default
         //mutableMembersVbox.Hide();
@@ -131,7 +156,7 @@ internal static class VisualUI
         {
             baseButton.Pressed += () =>
             {
-                _ = new GodotTween(baseButton)
+                _ = new NodeTween(baseButton)
                     .Delay(ReleaseFocusOnPressDelay)
                     .Callback(() => baseButton.ReleaseFocus());
             };

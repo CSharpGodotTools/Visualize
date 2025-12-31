@@ -8,7 +8,7 @@ namespace GodotUtils.Debugging;
 internal class VisualNodeManager
 {
     private static readonly Vector2 DefaultOffset = new(100, 100);
-    private Dictionary<ulong, VisualNodeInfo> _nodeTrackers = [];
+    private readonly Dictionary<ulong, VisualNodeInfo> _nodeTrackers = [];
 
     public void Register(Node node, params string[] readonlyMembers)
     {

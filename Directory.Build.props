@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <!-- Enables local-only post-build copy -->
+    <EnableGodotUtilsPostBuild>true</EnableGodotUtilsPostBuild>
+
+    <!-- Sibling Godot projects -->
+    <GodotProjectsRoot>$(MSBuildThisFileDirectory)..</GodotProjectsRoot>
+
+    <GodotProject1>$(GodotProjectsRoot)\Space-Game-v6</GodotProject1>
+    <GodotProject2>$(GodotProjectsRoot)\Template</GodotProject2>
+  </PropertyGroup>
+</Project>
