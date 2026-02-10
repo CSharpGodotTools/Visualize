@@ -156,9 +156,9 @@ internal static class VisualUI
         {
             baseButton.Pressed += () =>
             {
-                _ = new NodeTween(baseButton)
+                Tweens.Animate(baseButton)
                     .Delay(ReleaseFocusOnPressDelay)
-                    .Callback(() => baseButton.ReleaseFocus());
+                    .Then(baseButton.ReleaseFocus);
             };
         }
     }

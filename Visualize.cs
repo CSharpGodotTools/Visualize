@@ -60,9 +60,9 @@ public class Visualize
         if (vbox.GetChildCount() > MaxLabelsVisible)
             vbox.RemoveChild(vbox.GetChild(vbox.GetChildCount() - 1));
 
-        _ = new NodeTweenControl(label)
-            .AnimateColorRecursive(Colors.Transparent, fadeTime)
-            .Callback(label.QueueFree);
+        Tweens.Animate(label)
+            .ColorRecursive(Colors.Transparent, fadeTime)
+            .Then(label.QueueFree);
     }
 }
 #endif
