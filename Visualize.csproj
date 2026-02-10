@@ -1,4 +1,4 @@
-﻿<Project Sdk="Godot.NET.Sdk/4.5.1">
+﻿<Project Sdk="Godot.NET.Sdk/4.6.0">
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
@@ -23,16 +23,34 @@
 		<PackageReference Include="GodotSharp.SourceGenerators" Version="2.4.0" />
 
 		<Reference Include="GodotUtils">
-			<HintPath>addons/GodotUtils.dll</HintPath>
+			<HintPath>Framework\Libraries\GodotUtils.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(EnableGodotUtilsPostBuild)' == 'true'">
 
 		<ItemGroup>
-			<GodotTargets Include="$(GodotProject1);$(GodotProject2);$(GodotProject3)" />
+			<GodotTargets Include="$(GodotProject1)" Condition="'$(GodotProject1)' != ''" />
+			<GodotTargets Include="$(GodotProject2)" Condition="'$(GodotProject2)' != ''" />
+			<GodotTargets Include="$(GodotProject3)" Condition="'$(GodotProject3)' != ''" />
 		</ItemGroup>
 
-		<Exec Command="&#xA;			copy /Y &quot;$(TargetDir)Visualize.dll&quot; &quot;%(GodotTargets.Identity)\addons\Visualize.dll&quot;&#xA;			copy /Y &quot;$(TargetDir)Visualize.xml&quot; &quot;%(GodotTargets.Identity)\addons\Visualize.xml&quot;&#xA;			" />
+		<!-- Separate existing and missing projects -->
+		<ItemGroup>
+			<ValidGodotTargets Include="@(GodotTargets)" Condition="Exists('%(GodotTargets.Identity)')" />
+			<MissingGodotTargets Include="@(GodotTargets)" Condition="!Exists('%(GodotTargets.Identity)')" />
+		</ItemGroup>
+
+		<!-- Warn about missing projects -->
+		<Message Condition="@(MissingGodotTargets->Count()) &gt; 0" Text="Warning: The following Godot projects were not found: @(MissingGodotTargets, ', ')" Importance="High" />
+
+		<!-- Copy files to all valid projects -->
+		<ItemGroup>
+			<GodotCopyDirs Include="@(ValidGodotTargets->'%(Identity)\addons')" />
+		</ItemGroup>
+
+		<MakeDir Directories="@(GodotCopyDirs)" />
+		<Copy SourceFiles="$(TargetDir)Visualize.dll" DestinationFolder="%(GodotCopyDirs.Identity)" SkipUnchangedFiles="true" />
+		<Copy SourceFiles="$(TargetDir)Visualize.xml" DestinationFolder="%(GodotCopyDirs.Identity)" SkipUnchangedFiles="true" />
 	</Target>
 </Project>
