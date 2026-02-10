@@ -37,7 +37,7 @@ internal static class VisualMethods
 
             if (control.VisualControl != null)
             {
-                hboxParams.AddChild(new Label { Text = paramInfo.Name.ToPascalCase().AddSpaceBeforeEachCapital() });
+                hboxParams.AddChild(new Label { Text = VisualText.ToDisplayName(paramInfo.Name) });
                 hboxParams.AddChild(control.VisualControl.Control);
             }
         }
@@ -49,7 +49,8 @@ internal static class VisualMethods
     {
         foreach (MethodInfo method in methods)
         {
-            if (method.DeclaringType.IsSubclassOf(typeof(GodotObject)))
+            Type declaringType = method.DeclaringType;
+            if (declaringType != null && declaringType.IsSubclassOf(typeof(GodotObject)))
             {
                 ParameterInfo[] paramInfos = method.GetParameters();
                 object[] providedValues = new object[paramInfos.Length];

@@ -14,7 +14,7 @@ internal static class VisualUI
     /// <summary>
     /// Creates the visual panel for a specified visual node.
     /// </summary>
-    public static (Control, List<Action>) CreateVisualPanel(VisualData visualData, string[] readonlyMembers)
+    public static (Control, IReadOnlyList<Action>) CreateVisualPanel(VisualData visualData, string[] readonlyMembers)
     {
         Node node = visualData.Node;
 
@@ -82,6 +82,10 @@ internal static class VisualUI
     private static Vector2 GetCurrentCameraZoom(Node node)
     {
         Viewport viewport = node.GetViewport();
+        if (viewport == null)
+        {
+            return Vector2.One;
+        }
 
         Camera2D cam2D = viewport.GetCamera2D();
 

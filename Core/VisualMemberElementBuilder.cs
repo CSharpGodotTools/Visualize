@@ -54,7 +54,7 @@ internal static class VisualMemberElementBuilder
             container = new HBoxContainer();
         }
 
-        label.Text = member.Name.ToPascalCase().AddSpaceBeforeEachCapital();
+        label.Text = VisualText.ToDisplayName(member.Name);
         label.HorizontalAlignment = HorizontalAlignment.Center;
         container.Name = member.Name;
 

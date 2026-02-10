@@ -11,7 +11,7 @@ internal sealed class ReadonlyMemberBinder
 {
     private readonly List<Action> _updateActions = [];
 
-    public List<Action> UpdateActions => _updateActions;
+    public IReadOnlyList<Action> UpdateActions => _updateActions;
 
     public void AddReadonlyControls(string[] visualizeMembers, Node node, Control readonlyMembers)
     {

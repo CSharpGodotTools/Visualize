@@ -14,7 +14,7 @@ internal static partial class VisualControlTypes
     }
 }
 
-internal class BoolControl(CheckBox checkBox) : IVisualControl
+internal sealed class BoolControl(CheckBox checkBox) : IVisualControl
 {
     public void SetValue(object value)
     {

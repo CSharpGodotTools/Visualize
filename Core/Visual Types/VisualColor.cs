@@ -16,7 +16,7 @@ internal static partial class VisualControlTypes
     }
 }
 
-internal class ColorPickerButtonControl(ColorPickerButton colorPickerButton) : IVisualControl
+internal sealed class ColorPickerButtonControl(ColorPickerButton colorPickerButton) : IVisualControl
 {
     public void SetValue(object value)
     {

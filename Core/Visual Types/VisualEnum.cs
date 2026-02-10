@@ -18,7 +18,7 @@ internal static partial class VisualControlTypes
 
         foreach (object item in Enum.GetValues(type))
         {
-            optionButton.AddItem(item.ToString().AddSpaceBeforeEachCapital());
+            optionButton.AddItem(VisualText.ToSpacedName(item.ToString()));
         }
 
         optionButton.ItemSelected += index =>
@@ -40,7 +40,7 @@ internal static partial class VisualControlTypes
     }
 }
 
-internal class OptionButtonEnumControl(OptionButton optionButton, Action<object> select) : IVisualControl
+internal sealed class OptionButtonEnumControl(OptionButton optionButton, Action<object> select) : IVisualControl
 {
     public Control Control => optionButton;
 

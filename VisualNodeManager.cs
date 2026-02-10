@@ -2,22 +2,23 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace GodotUtils.Debugging;
 
-internal class VisualNodeManager
+internal sealed class VisualNodeManager
 {
     private static readonly Vector2 DefaultOffset = new(100, 100);
     private readonly Dictionary<ulong, VisualNodeInfo> _nodeTrackers = [];
 
     public void Register(Node node, params string[] readonlyMembers)
     {
+        ArgumentNullException.ThrowIfNull(node);
+
         VisualData visualData = VisualizeAttributeHandler.RetrieveData(node);
 
         if (visualData != null)
         {
-            (Control visualPanel, List<Action> actions) = VisualUI.CreateVisualPanel(visualData, readonlyMembers);
+            (Control visualPanel, IReadOnlyList<Action> actions) = VisualUI.CreateVisualPanel(visualData, readonlyMembers);
 
             ulong instanceId = node.GetInstanceId();
             Node positionalNode = GetClosestParentOfType(node, typeof(Node2D), typeof(Control));
@@ -35,11 +36,11 @@ internal class VisualNodeManager
             visualPanel.GlobalPosition = initialPosition;
 
             // Ensure the added visual panel is not overlapping with any other visual panels
-            IEnumerable<Control> controls = _nodeTrackers.Select(x => x.Value.VisualControl);
             Vector2 offset = Vector2.Zero;
 
-            foreach (Control existingControl in controls)
+            foreach (VisualNodeInfo tracker in _nodeTrackers.Values)
             {
+                Control existingControl = tracker.VisualControl;
                 if (existingControl == visualPanel)
                     continue; // Skip checking against itself
 

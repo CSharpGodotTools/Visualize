@@ -1,5 +1,6 @@
 #if DEBUG
 using Godot;
+using System;
 
 namespace GodotUtils.Debugging;
 
@@ -13,6 +14,8 @@ public static class Visualize
 
     public static void Register(Node node, params string[] readonlyMembers)
     {
+        ArgumentNullException.ThrowIfNull(node);
+
         if (VisualizeAutoload.Instance == null)
         {
             PrintUtils.Warning("[Visualize] VisualizeAutoload is not initialized.");
@@ -29,6 +32,8 @@ public static class Visualize
 
     public static void Log(object message, Node node, double fadeTime = 5)
     {
+        ArgumentNullException.ThrowIfNull(node);
+
         VBoxContainer vbox = GetOrCreateVBoxContainer(node);
 
         if (vbox != null)

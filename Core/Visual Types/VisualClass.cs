@@ -154,7 +154,7 @@ internal static partial class VisualControlTypes
 
     private static HBoxContainer CreateHBoxForMember(string memberName, Control control)
     {
-        Label label = new() { Text = memberName.ToPascalCase().AddSpaceBeforeEachCapital() };
+        Label label = new() { Text = VisualText.ToDisplayName(memberName) };
         label.CustomMinimumSize = new Vector2(200, 0);
 
         HBoxContainer hbox = new();
@@ -178,7 +178,7 @@ internal static partial class VisualControlTypes
     }
 }
 
-internal class ClassControl(Control container, List<VisualControlTypes.MemberControlBinding> bindings) : IVisualControl
+internal sealed class ClassControl(Control container, List<VisualControlTypes.MemberControlBinding> bindings) : IVisualControl
 {
     public void SetValue(object value)
     {

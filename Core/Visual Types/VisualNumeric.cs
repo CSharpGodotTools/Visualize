@@ -82,7 +82,7 @@ internal static partial class VisualControlTypes
     }
 }
 
-internal class NumericControl(SpinBox spinBox) : IVisualControl
+internal sealed class NumericControl(SpinBox spinBox) : IVisualControl
 {
     public void SetValue(object value)
     {
