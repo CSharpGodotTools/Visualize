@@ -2,10 +2,6 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 using static Godot.Control;
 
 namespace GodotUtils.Debugging;
@@ -15,76 +11,35 @@ namespace GodotUtils.Debugging;
 /// </summary>
 internal static class VisualUI
 {
-    public const float VisualUiScaleFactor = 0.6f;
-
-    private const double ReleaseFocusOnPressDelay = 0.1;
-    private const float PanelScaleFactor = 0.9f;
-    private const int MinScrollViewDistance = 350;
-    private const int TitleFontSize = 20;
-    private const int MemberFontSize = 18;
-    private const int FontOutlineSize = 6;
-    private const int MinButtonSize = 25;
-    private const int MaxSecondsToWaitForInitialValues = 3;
-
-    private static readonly Texture2D _eyeOpen = LoadEmbeddedTexture("Visualize.EyeOpen.png");
-    private static readonly Texture2D _eyeClosed = LoadEmbeddedTexture("Visualize.EyeClosed.png");
-    private static readonly Texture2D _wrench = LoadEmbeddedTexture("Visualize.Wrench.png");
-
-    private static readonly Color Green = new(0.8f, 1, 0.8f);
-    private static readonly Color Pink = new(1.0f, 0.75f, 0.8f);
-
-    /// <summary>
-    /// Loads a PNG image embedded in the assembly as a resource and converts it into an ImageTexture.
-    /// The <paramref name="resourceName"/> must be the fully qualified path including the namespace 
-    /// and folders, for example "Visualize.Icons.EyeOpen.png".
-    /// </summary>
-    private static ImageTexture LoadEmbeddedTexture(string resourceName)
-    {
-        Assembly assembly = typeof(VisualUI).Assembly;
-
-        using Stream stream = assembly.GetManifestResourceStream(resourceName) ?? 
-            throw new InvalidOperationException($"Embedded resource not found: {resourceName}");
-
-        using MemoryStream ms = new();
-        stream.CopyTo(ms);
-        byte[] bytes = ms.ToArray();
-
-        Image image = new();
-        image.LoadPngFromBuffer(bytes);
-
-        return ImageTexture.CreateFromImage(image);
-    }
-
     /// <summary>
     /// Creates the visual panel for a specified visual node.
     /// </summary>
     public static (Control, List<Action>) CreateVisualPanel(VisualData visualData, string[] readonlyMembers)
     {
-        List<Action> updateControls = [];
-
         Node node = visualData.Node;
 
-        PanelContainer panelContainer = CreatePanelContainer(node.Name);
+        PanelContainer panelContainer = VisualUiElementFactory.CreatePanelContainer(node.Name);
         panelContainer.MouseFilter = MouseFilterEnum.Ignore;
         panelContainer.Name = "Main Panel";
 
         Vector2 currentCameraZoom = GetCurrentCameraZoom(node);
-        panelContainer.Scale = new Vector2(1f / currentCameraZoom.X, 1f / currentCameraZoom.Y) * PanelScaleFactor;
+        panelContainer.Scale = new Vector2(1f / currentCameraZoom.X, 1f / currentCameraZoom.Y) * VisualUiLayout.PanelScaleFactor;
 
-        VBoxContainer mutableMembersVbox = CreateColoredVBox(Green);
+        VBoxContainer mutableMembersVbox = VisualUiElementFactory.CreateColoredVBox(VisualUiResources.MutableMembersColor);
         mutableMembersVbox.MouseFilter =  MouseFilterEnum.Ignore;
         mutableMembersVbox.Name = "Mutable Members";
 
-        VBoxContainer readonlyMembersVbox = CreateColoredVBox(Pink);
+        VBoxContainer readonlyMembersVbox = VisualUiElementFactory.CreateColoredVBox(VisualUiResources.ReadonlyMembersColor);
         readonlyMembersVbox.MouseFilter = MouseFilterEnum.Ignore;
         readonlyMembersVbox.Name = "Readonly Members";
 
         // Readonly Members
-        AddReadonlyControls(readonlyMembers, node, readonlyMembersVbox, updateControls);
+        ReadonlyMemberBinder readonlyBinder = new();
+        readonlyBinder.AddReadonlyControls(readonlyMembers, node, readonlyMembersVbox);
 
         // Mutable Members
-        AddMutableControls(mutableMembersVbox, visualData.Properties, node);
-        AddMutableControls(mutableMembersVbox, visualData.Fields, node);
+        VisualMemberElementBuilder.AddMutableControls(mutableMembersVbox, visualData.Properties, node);
+        VisualMemberElementBuilder.AddMutableControls(mutableMembersVbox, visualData.Fields, node);
 
         // Methods
         VisualMethods.AddMethodInfoElements(mutableMembersVbox, visualData.Methods, node);
@@ -99,31 +54,29 @@ internal static class VisualUI
         {
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
             VerticalScrollMode = ScrollContainer.ScrollMode.ShowNever,
-            CustomMinimumSize = new Vector2(0, MinScrollViewDistance)
+            CustomMinimumSize = new Vector2(0, VisualUiLayout.MinScrollViewDistance)
         };
 
         // Make them hidden by default
         //mutableMembersVbox.Hide();
         //readonlyMembersVbox.Hide();
 
-        VBoxContainer titleBar = CreateTitleBar(node.Name, mutableMembersVbox, readonlyMembersVbox, visualData, readonlyMembers);
+        VBoxContainer titleBar = VisualTitleBarBuilder.Build(node.Name, mutableMembersVbox, readonlyMembersVbox, visualData, readonlyMembers);
         titleBar.Name = "Main VBox";
         titleBar.MouseFilter = MouseFilterEnum.Ignore;
         titleBar.AddChild(readonlyMembersVbox);
         titleBar.AddChild(mutableMembersVbox);
 
-        SetButtonsToReleaseFocusOnPress(titleBar);
-
         scrollContainer.AddChild(titleBar);
         panelContainer.AddChild(scrollContainer);
         
         // Add to canvas layer so UI is not affected by lighting in game world
-        CanvasLayer canvasLayer = CreateCanvasLayer(node.Name, node.GetInstanceId());
+        CanvasLayer canvasLayer = VisualUiElementFactory.CreateCanvasLayer(node.Name, node.GetInstanceId());
         canvasLayer.AddChild(panelContainer);
 
         node.CallDeferred(Node.MethodName.AddChild, canvasLayer);
 
-        return (panelContainer, updateControls);
+        return (panelContainer, readonlyBinder.UpdateActions);
     }
 
     private static Vector2 GetCurrentCameraZoom(Node node)
@@ -140,363 +93,5 @@ internal static class VisualUI
         return Vector2.One;
     }
 
-    /// <summary>
-    /// Ensures buttons release focus on press within a VBoxContainer.
-    /// </summary>
-    private static void SetButtonsToReleaseFocusOnPress(VBoxContainer vboxParent)
-    {
-        foreach (BaseButton baseButton in vboxParent.GetChildren<BaseButton>())
-        {
-            baseButton.Pressed += () =>
-            {
-                Tweens.Animate(baseButton)
-                    .Delay(ReleaseFocusOnPressDelay)
-                    .Then(baseButton.ReleaseFocus);
-            };
-        }
-    }
-
-    private static VBoxContainer CreateTitleBar(string name, Control mutableMembersVbox, Control readonlyMembersVbox, VisualData visualData, string[] readonlyMembers)
-    {
-        VBoxContainer vboxParent = new();
-
-        HBoxContainer hbox = new()
-        {
-            Name = "Title Bar",
-            Alignment = BoxContainer.AlignmentMode.Center,
-            MouseFilter = MouseFilterEnum.Ignore
-        };
-
-        Label title = new()
-        {
-            Name = "Title",
-            Text = name,
-            Visible = true,
-            LabelSettings = new LabelSettings
-            {
-                FontSize = TitleFontSize,
-                FontColor = Colors.LightSkyBlue,
-                OutlineColor = Colors.Black,
-                OutlineSize = FontOutlineSize,
-            }
-        };
-
-        hbox.AddChild(title);
-
-        Button readonlyBtn = null;
-        Button mutableBtn = null;
-
-        if (readonlyMembers != null)
-        {
-            readonlyBtn = CreateVisibilityButton(_eyeOpen, Colors.Pink);
-            readonlyBtn.ButtonPressed = true;
-            hbox.AddChild(readonlyBtn);
-        }
-
-        if (visualData.Properties.Any() || visualData.Fields.Any())
-        {
-            mutableBtn = CreateVisibilityButton(_wrench, Colors.Gray);
-            mutableBtn.ButtonPressed = true;
-            hbox.AddChild(mutableBtn);
-        }
-
-        if (readonlyBtn != null)
-        {
-            readonlyBtn.Pressed += () =>
-            {
-                readonlyBtn.Icon = readonlyBtn.ButtonPressed ? _eyeOpen : _eyeClosed;
-                readonlyMembersVbox.Visible = readonlyBtn.ButtonPressed;
-                title.Visible = readonlyBtn.ButtonPressed || (mutableBtn != null && mutableBtn.ButtonPressed);
-            };
-        }
-
-        if (mutableBtn != null)
-        {
-            mutableBtn.Pressed += () =>
-            {
-                mutableMembersVbox.Visible = mutableBtn.ButtonPressed;
-                title.Visible = mutableBtn.ButtonPressed || (readonlyBtn != null && readonlyBtn.ButtonPressed);
-            };
-        }
-
-        vboxParent.AddChild(hbox);
-
-        return vboxParent;
-    }
-
-    private static Button CreateVisibilityButton(Texture2D icon, Color color)
-    {
-        Button btn = new()
-        {
-            Name = "Toggle Visibility",
-            ToggleMode = true,
-            Icon = icon,
-            Flat = true,
-            ExpandIcon = true,
-            SelfModulate = color,
-            CustomMinimumSize = Vector2.One * MinButtonSize,
-            TextureFilter = CanvasItem.TextureFilterEnum.Nearest
-        };
-
-        btn.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
-
-        return btn;
-    }
-
-    /// <summary>
-    /// Creates a colored VBoxContainer with specified RGB values.
-    /// </summary>
-    private static VBoxContainer CreateColoredVBox(Color color)
-    {
-        return new VBoxContainer
-        {
-            Modulate = color
-        };
-    }
-    
-    /// <summary>
-    /// Creates a panel container with a specified name.
-    /// </summary>
-    private static PanelContainer CreatePanelContainer(string name)
-    {
-        PanelContainer panelContainer = new()
-        {
-            // Ensure this info is rendered above all game elements
-            Name = name,
-            Scale = Vector2.One * VisualUiScaleFactor,
-            ZIndex = (int)RenderingServer.CanvasItemZMax
-        };
-
-        panelContainer.AddThemeStyleboxOverride("panel", new StyleBoxEmpty());
-
-        return panelContainer;
-    }
-
-    /// <summary>
-    /// Attempts to get member information for a Internal.
-    /// </summary>
-    private static void TryGetMemberInfo(Node node, string visualMember, out PropertyInfo property, out FieldInfo field, out object initialValue)
-    {
-        BindingFlags memberTypes = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
-
-        property = node.GetType().GetProperty(visualMember, memberTypes);
-        field = null;
-        initialValue = null;
-
-        if (property != null)
-        {
-            MethodInfo getter = property.GetGetMethod(true);
-            if (getter != null)
-            {
-                initialValue = property.GetValue(getter.IsStatic ? null : node);
-                return;
-            }
-
-            property = null;
-        }
-
-        field = node.GetType().GetField(visualMember, memberTypes);
-
-        if (field != null)
-        {
-            initialValue = field.GetValue(field.IsStatic ? null : node);
-        }
-    }
-
-    /// <summary>
-    /// Adds visual controls for specified members of a Internal.
-    /// </summary>
-    private static void AddReadonlyControls(string[] visualizeMembers, Node node, Control readonlyMembers, List<Action> updateControls)
-    {
-        if (visualizeMembers == null)
-        {
-            return;
-        }
-        
-        foreach (string visualMember in visualizeMembers)
-        {
-            TryGetMemberInfo(node, visualMember, out PropertyInfo property, out FieldInfo field, out object initialValue);
-
-            // If neither property nor field is found, skip this member
-            if (property == null && field == null)
-            {
-                continue;
-            }
-
-            if (initialValue != null)
-            {
-                AddReadonlyControl(visualMember, readonlyMembers, node, field, property, initialValue, updateControls);
-            }
-            else
-            {
-                _ = TryAddReadonlyControlAsync(visualMember, readonlyMembers, node, field, property, updateControls);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Creates a canvas layer for a Internal with a specified name and instance ID.
-    /// </summary>
-    private static CanvasLayer CreateCanvasLayer(string name, ulong instanceId)
-    {
-        CanvasLayer canvasLayer = new();
-        canvasLayer.FollowViewportEnabled = true;
-        canvasLayer.Name = $"Visualizing {name} {instanceId}";
-        return canvasLayer;
-    }
-
-    /// <summary>
-    /// Asynchronously tries to add a visual control for a Internal member.
-    /// </summary>
-    private static async Task TryAddReadonlyControlAsync(string visualMember, Control readonlyMembers, Node node, FieldInfo field, PropertyInfo property, List<Action> updateControls)
-    {
-        int elapsedSeconds = 0;
-
-        while (true)
-        {
-            object value = null;
-
-            if (field != null)
-            {
-                value = field.GetValue(node);
-            }
-            else if (property != null)
-            {
-                value = property.GetValue(node);
-            }
-
-            if (value != null)
-            {
-                AddReadonlyControl(visualMember, readonlyMembers, node, field, property, value, updateControls);
-                break;
-            }
-
-            const int OneSecondInMs = 1000;
-            await Task.Delay(OneSecondInMs);
-            elapsedSeconds++;
-
-            if (elapsedSeconds == MaxSecondsToWaitForInitialValues)
-            {
-                string memberName = string.Empty;
-
-                if (field != null)
-                {
-                    memberName = field.Name;
-                }
-                else if (property != null)
-                {
-                    memberName = property.Name;
-                }
-
-                GD.PrintRich($"[color=orange][Visualize] Tracking '{node.Name}' to see if '{memberName}' value changes[/color]");
-            }
-        }
-    }
-
-    /// <summary>
-    /// Adds a visual control to the UI for a Internal member.
-    /// </summary>
-    private static void AddReadonlyControl(string visualMember, Control readonlyMembers, Node node, FieldInfo field, PropertyInfo property, object initialValue, List<Action> updateControls)
-    {
-        Type memberType = property != null ? property.PropertyType : field.FieldType;
-
-        MemberInfo member = property != null ? property : field;
-
-        VisualControlContext context = new(initialValue, _ =>
-        {
-            // Do nothing
-        });
-
-        VisualControlInfo visualControlInfo = VisualControlTypes.CreateControlForType(memberType, member, context);
-
-        if (visualControlInfo.VisualControl == null)
-        {
-            return;
-        }
-
-        visualControlInfo.VisualControl.SetEditable(false);
-
-        updateControls.Add(() =>
-        {
-            object newValue = property != null
-                ? property.GetValue(property.GetGetMethod(true).IsStatic ? null : node)
-                : field.GetValue(field.IsStatic ? null : node);
-
-            visualControlInfo.VisualControl.SetValue(newValue);
-        });
-
-        HBoxContainer hbox = new();
-        hbox.Name = visualMember;
-
-        hbox.AddChild(new Label { Text = visualMember });
-        hbox.AddChild(visualControlInfo.VisualControl.Control);
-
-        readonlyMembers.AddChild(hbox);
-    }
-
-    /// <summary>
-    /// Adds member information elements to a VBoxContainer.
-    /// </summary>
-    private static void AddMutableControls(Control vbox, IEnumerable<MemberInfo> members, Node node)
-    {
-        foreach (MemberInfo member in members)
-        {
-            Control element = CreateMemberInfoElement(member, node);
-
-            if (element != null)
-                vbox.AddChild(element);
-        }
-    }
-
-    /// <summary>
-    /// Creates a member information element for a specified Internal member.
-    /// </summary>
-    private static Control CreateMemberInfoElement(MemberInfo member, Node node)
-    {
-        Type type = VisualHandler.GetMemberType(member);
-
-        object initialValue = VisualHandler.GetMemberValue(member, node);
-
-        if (initialValue == null)
-        {
-            PrintUtils.Warning($"[Visualize] '{member.Name}' value in '{node.Name}' is null");
-            return null;
-        }
-
-        VisualControlInfo element = VisualControlTypes.CreateControlForType(type, member, new VisualControlContext(initialValue, v =>
-        {
-            VisualHandler.SetMemberValue(member, node, v);
-        }));
-
-        Control container;
-        Label label = new();
-
-        if (element.VisualControl is ClassControl)
-        {
-            container = new VBoxContainer();
-            label.LabelSettings = new LabelSettings
-            {
-                FontSize = MemberFontSize,
-                OutlineSize = FontOutlineSize,
-                OutlineColor = Colors.Black,
-            };
-        }
-        else
-        {
-            container = new HBoxContainer();
-        }
-
-        label.Text = member.Name.ToPascalCase().AddSpaceBeforeEachCapital();
-        label.HorizontalAlignment = HorizontalAlignment.Center;
-        container.Name = member.Name;
-
-        if (element.VisualControl == null)
-            return container;
-
-        container.AddChild(label);
-        container.AddChild(element.VisualControl.Control);
-
-        return container;
-    }
 }
 #endif

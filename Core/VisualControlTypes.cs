@@ -65,7 +65,7 @@ internal interface IVisualControl
     void SetEditable(bool editable);
 }
 
-internal class VisualControlInfo(IVisualControl visualControl)
+internal sealed class VisualControlInfo(IVisualControl visualControl)
 {
     public IVisualControl VisualControl { get; } = visualControl;
 }

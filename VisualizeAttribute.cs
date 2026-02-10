@@ -4,7 +4,7 @@ using System;
 namespace GodotUtils.Debugging;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Method)]
-public class VisualizeAttribute : Attribute
+public sealed class VisualizeAttribute : Attribute
 {
 }
 #endif

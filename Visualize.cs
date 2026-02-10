@@ -50,7 +50,7 @@ public static class Visualize
 
         return autoload.GetOrCreateNonAttributeLogContainer(node, () =>
         {
-            VBoxContainer container = new() { Scale = Vector2.One * VisualUI.VisualUiScaleFactor };
+            VBoxContainer container = new() { Scale = Vector2.One * VisualUiLayout.LogScaleFactor };
             node.AddChild(container);
             return container;
         });

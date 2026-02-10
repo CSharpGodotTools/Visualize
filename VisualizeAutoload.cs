@@ -67,7 +67,7 @@ public sealed class VisualizeAutoload : IDisposable
     }
 }
 
-internal class VisualNodeInfo(List<Action> actions, Control visualControl, Node node, Vector2 offset)
+internal sealed class VisualNodeInfo(List<Action> actions, Control visualControl, Node node, Vector2 offset)
 {
     public List<Action> Actions { get; } = actions ?? throw new ArgumentNullException(nameof(actions));
     public Control VisualControl { get; } = visualControl ?? throw new ArgumentNullException(nameof(visualControl));
