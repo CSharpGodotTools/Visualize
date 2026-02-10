@@ -11,87 +11,42 @@ internal static partial class VisualControlTypes
 {
     private static VisualControlInfo VisualClass(Type type, VisualControlContext context)
     {
-        GridContainer container = new();
-        container.Columns = 1;
+        GridContainer container = new() { Columns = 1 };
 
         if (context.InitialValue == null)
         {
-            // Not really sure what side effects this will have but the reason I've done this is because
-            // auto properties cannot have default values so their initial value will always be null.
-            return new VisualControlInfo(
-                new ClassControl(
-                    container: container,
-                    visualPropertyControls: [],
-                    visualFieldControls: [],
-                    properties: [],
-                    fields: []
-                )
-            );
-
-            // Originally this is all I was doing.
-            //throw new Exception($"[Visualize] Contexts initial value was null for type '{type}'");
+            return new VisualControlInfo(new ClassControl(container, []));
         }
 
         BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly;
 
-        AddProperties(flags, container, type, context, out List<IVisualControl> propertyControls, out PropertyInfo[] properties);
-        AddFields(flags, container, type, context, out List<IVisualControl> fieldControls, out FieldInfo[] fields);
+        List<MemberControlBinding> memberBindings = [];
+        memberBindings.AddRange(AddMembers(container, context, CollectPropertyMembers(type, flags)));
+        memberBindings.AddRange(AddMembers(container, context, CollectFieldMembers(type, flags)));
         AddMethods(flags, container, type, context);
 
-        return new VisualControlInfo(new ClassControl(container, propertyControls, fieldControls, properties, fields));
+        return new VisualControlInfo(new ClassControl(container, memberBindings));
     }
 
-    private static void AddProperties(BindingFlags flags, Control vbox, Type type, VisualControlContext context, out List<IVisualControl> propertyControls, out PropertyInfo[] properties)
+    private static IEnumerable<MemberDescriptor> CollectPropertyMembers(Type type, BindingFlags flags)
     {
-        propertyControls = [];
-
-        // Get all the class properties
-        properties = [.. type.GetProperties(flags).Where(p => !(typeof(Delegate).IsAssignableFrom(p.PropertyType)))];
-
+        PropertyInfo[] properties = [.. type.GetProperties(flags).Where(p => !(typeof(Delegate).IsAssignableFrom(p.PropertyType)))];
         FilterByVisualizeAttribute(ref properties);
 
-        // Create the controls for each property
         foreach (PropertyInfo property in properties)
         {
-            object initialValue = property.GetValue(context.InitialValue);
-
-            MethodInfo propertySetMethod = property.GetSetMethod(true);
-
-            VisualControlInfo control = CreateControlForType(property.PropertyType, property, new VisualControlContext(context.SpinBoxes, initialValue, v =>
-            {
-                property.SetValue(context.InitialValue, v);
-                context.ValueChanged(context.InitialValue);
-            }));
-
-            if (control.VisualControl != null)
-            {
-                propertyControls.Add(control.VisualControl);
-
-                control.VisualControl.SetEditable(propertySetMethod != null);
-
-                HBoxContainer hbox = CreateHBoxForMember(property.Name, control.VisualControl.Control);
-                hbox.Name = property.Name;
-
-                vbox.AddChild(hbox);
-            }
+            yield return new MemberDescriptor(property, property.PropertyType, property.GetSetMethod(true) != null);
         }
     }
 
-    private static void AddFields(BindingFlags flags, Control vbox, Type type, VisualControlContext context, out List<IVisualControl> fieldControls, out FieldInfo[] fields)
+    private static IEnumerable<MemberDescriptor> CollectFieldMembers(Type type, BindingFlags flags)
     {
-        fieldControls = [];
-
-        // Grab all the real property names, and turn each into the expected backing‑field name ("_" + lowercase‑first‑char + rest)
         string[] propNames = [.. type.GetProperties(flags).Select(p => p.Name)];
-
         HashSet<string> backingFieldNames = new(
-            propNames.Select(n =>
-                "_" + char.ToLowerInvariant(n[0]) + n.Substring(1)
-            )
+            propNames.Select(n => "_" + char.ToLowerInvariant(n[0]) + n.Substring(1))
         );
 
-        // Get all the class fields
-        fields = [.. type
+        FieldInfo[] fields = [.. type
             .GetFields(flags)
             // Exclude delegate types
             .Where(f => !(typeof(Delegate).IsAssignableFrom(f.FieldType)))
@@ -104,31 +59,49 @@ internal static partial class VisualControlTypes
 
         foreach (FieldInfo field in fields)
         {
-            object initialValue = field.GetValue(context.InitialValue);
+            yield return new MemberDescriptor(field, field.FieldType, !field.IsLiteral);
+        }
+    }
 
-            VisualControlInfo control = CreateControlForType(field.FieldType, field, new VisualControlContext(context.SpinBoxes, initialValue, v =>
+    private static IEnumerable<MemberControlBinding> AddMembers(Control vbox, VisualControlContext context, IEnumerable<MemberDescriptor> members)
+    {
+        List<MemberControlBinding> bindings = [];
+
+        foreach (MemberDescriptor member in members)
+        {
+            object initialValue = VisualHandler.GetMemberValue(member.Member, context.InitialValue);
+
+            VisualControlInfo control = CreateControlForType(member.MemberType, member.Member, new VisualControlContext(initialValue, v =>
             {
-                field.SetValue(context.InitialValue, v);
+                if (!member.IsEditable)
+                {
+                    return;
+                }
+
+                VisualHandler.SetMemberValue(member.Member, context.InitialValue, v);
                 context.ValueChanged(context.InitialValue);
             }));
 
-            if (control.VisualControl != null)
+            if (control.VisualControl == null)
             {
-                fieldControls.Add(control.VisualControl);
-
-                control.VisualControl.SetEditable(!field.IsLiteral);
-
-                HBoxContainer hbox = CreateHBoxForMember(field.Name, control.VisualControl.Control);
-                hbox.Name = field.Name;
-
-                vbox.AddChild(hbox);
+                continue;
             }
+
+            control.VisualControl.SetEditable(member.IsEditable);
+
+            HBoxContainer hbox = CreateHBoxForMember(member.Member.Name, control.VisualControl.Control);
+            hbox.Name = member.Member.Name;
+            vbox.AddChild(hbox);
+
+            bindings.Add(new MemberControlBinding(member.Member, control.VisualControl, member.IsEditable));
         }
+
+        return bindings;
     }
 
     private static void AddMethods(BindingFlags flags, Control vbox, Type type, VisualControlContext context)
     {
-        // Cannot include private methods or else we will see Godots built in methods
+        // Cannot include private methods or else we will see Godot's built-in methods
         flags &= ~BindingFlags.NonPublic;
 
         MethodInfo[] methods = [.. type.GetMethods(flags)
@@ -148,7 +121,7 @@ internal static partial class VisualControlTypes
             ParameterInfo[] paramInfos = method.GetParameters();
             object[] providedValues = new object[paramInfos.Length];
 
-            HBoxContainer hboxParams = VisualMethods.CreateMethodParameterControls(method, context.SpinBoxes, providedValues);
+            HBoxContainer hboxParams = VisualMethods.CreateMethodParameterControls(method, providedValues);
             Button button = VisualMethods.CreateMethodButton(method, context.InitialValue, paramInfos, providedValues);
 
             vbox.AddChild(hboxParams);
@@ -189,22 +162,30 @@ internal static partial class VisualControlTypes
         hbox.AddChild(control);
         return hbox;
     }
+
+    private sealed class MemberDescriptor(MemberInfo member, Type memberType, bool isEditable)
+    {
+        public MemberInfo Member { get; } = member;
+        public Type MemberType { get; } = memberType;
+        public bool IsEditable { get; } = isEditable;
+    }
+
+    internal sealed class MemberControlBinding(MemberInfo member, IVisualControl control, bool isEditable)
+    {
+        public MemberInfo Member { get; } = member;
+        public IVisualControl Control { get; } = control;
+        public bool IsEditable { get; } = isEditable;
+    }
 }
 
-internal class ClassControl(Control container, List<IVisualControl> visualPropertyControls, List<IVisualControl> visualFieldControls, PropertyInfo[] properties, FieldInfo[] fields) : IVisualControl
+internal class ClassControl(Control container, List<VisualControlTypes.MemberControlBinding> bindings) : IVisualControl
 {
     public void SetValue(object value)
     {
-        for (int i = 0; i < properties.Length; i++)
+        foreach (VisualControlTypes.MemberControlBinding binding in bindings)
         {
-            object propValue = properties[i].GetValue(value);
-            visualPropertyControls[i].SetValue(propValue);
-        }
-
-        for (int i = 0; i < fields.Length; i++)
-        {
-            object fieldValue = fields[i].GetValue(value);
-            visualFieldControls[i].SetValue(fieldValue);
+            object memberValue = VisualHandler.GetMemberValue(binding.Member, value);
+            binding.Control.SetValue(memberValue);
         }
     }
 
@@ -212,14 +193,9 @@ internal class ClassControl(Control container, List<IVisualControl> visualProper
 
     public void SetEditable(bool editable)
     {
-        foreach (IVisualControl visualControl in visualPropertyControls)
+        foreach (VisualControlTypes.MemberControlBinding binding in bindings)
         {
-            visualControl.SetEditable(editable);
-        }
-
-        foreach (IVisualControl visualControl in visualFieldControls)
-        {
-            visualControl.SetEditable(editable);
+            binding.Control.SetEditable(editable && binding.IsEditable);
         }
     }
 }

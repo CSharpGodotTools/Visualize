@@ -33,9 +33,10 @@ internal static class VisualHandler
     {
         if (property.CanWrite)
         {
-            object convertedValue = Convert.ChangeType(value, property.PropertyType);
+            object convertedValue = ConvertValue(value, property.PropertyType);
 
-            if (property.GetMethod.IsStatic)
+            MethodInfo setter = property.SetMethod;
+            if (setter != null && setter.IsStatic)
             {
                 property.SetValue(null, convertedValue);
             }
@@ -52,7 +53,7 @@ internal static class VisualHandler
 
     private static void SetFieldValue(FieldInfo field, object target, object value)
     {
-        object convertedValue = Convert.ChangeType(value, field.FieldType);
+        object convertedValue = ConvertValue(value, field.FieldType);
 
         if (field.IsStatic)
         {
@@ -71,16 +72,7 @@ internal static class VisualHandler
             return default;
         }
 
-        object value = member switch
-        {
-            FieldInfo fieldInfo when fieldInfo.IsStatic => fieldInfo.GetValue(null),
-            FieldInfo fieldInfo => fieldInfo.GetValue(node),
-
-            PropertyInfo propertyInfo when propertyInfo.GetMethod.IsStatic => propertyInfo.GetValue(null),
-            PropertyInfo propertyInfo => propertyInfo.GetValue(node),
-
-            _ => throw new ArgumentException("[Visualize] Member is not a FieldInfo or PropertyInfo")
-        };
+        object value = GetMemberValue(member, node);
 
         if (value == null)
         {
@@ -102,11 +94,26 @@ internal static class VisualHandler
             FieldInfo fieldInfo when fieldInfo.IsStatic => fieldInfo.GetValue(null),
             FieldInfo fieldInfo => fieldInfo.GetValue(obj),
 
-            PropertyInfo propertyInfo when propertyInfo.GetMethod.IsStatic => propertyInfo.GetValue(null),
+            PropertyInfo propertyInfo when propertyInfo.GetGetMethod(true)?.IsStatic == true => propertyInfo.GetValue(null),
             PropertyInfo propertyInfo => propertyInfo.GetValue(obj),
 
             _ => throw new ArgumentException("[Visualize] Member must be a field or property.")
         };
+    }
+
+    private static object ConvertValue(object value, Type targetType)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+
+        if (targetType.IsInstanceOfType(value))
+        {
+            return value;
+        }
+
+        return Convert.ChangeType(value, targetType);
     }
 
     public static Type GetMemberType(MemberInfo member)

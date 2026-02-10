@@ -25,57 +25,10 @@ internal static partial class VisualControlTypes
 
         foreach (DictionaryEntry entry in dictionary)
         {
-            object key = entry.Key;
-            object value = entry.Value;
-
-            VisualControlInfo valueControl = CreateControlForType(valueType, null, new VisualControlContext(context.SpinBoxes, value, v =>
-            {
-                dictionary[key] = v;
-                context.ValueChanged(dictionary);
-            }));
-
-            VisualControlInfo keyControl = CreateControlForType(keyType, null, new VisualControlContext(context.SpinBoxes, key, v =>
-            {
-                if (dictionary.Contains(v))
-                {
-                    return;
-                }
-
-                if (v.GetType() != keyType)
-                {
-                    throw new ArgumentException($"[Visualize] Type mismatch: Expected {keyType}, got {v.GetType()}");
-                }
-
-                dictionary.Remove(key);
-                dictionary[v] = value;
-                key = v;
-                context.ValueChanged(dictionary);
-                SetControlValue(valueControl.VisualControl.Control, defaultValue);
-            }));
-
-            if (keyControl.VisualControl != null && valueControl.VisualControl != null)
-            {
-                SetControlValue(keyControl.VisualControl.Control, key);
-                SetControlValue(valueControl.VisualControl.Control, value);
-
-                Button removeKeyEntryButton = new() { Text = "-" };
-                HBoxContainer hbox = new();
-
-                removeKeyEntryButton.Pressed += () =>
-                {
-                    dictionaryVBox.RemoveChild(hbox);
-                    dictionary.Remove(key);
-                    context.ValueChanged(dictionary);
-                };
-
-                hbox.AddChild(keyControl.VisualControl.Control);
-                hbox.AddChild(valueControl.VisualControl.Control);
-                hbox.AddChild(removeKeyEntryButton);
-                dictionaryVBox.AddChild(hbox);
-            }
+            AddEntry(entry.Key, entry.Value);
         }
 
-        void AddNewEntryToDictionary()
+        addButton.Pressed += () =>
         {
             if (dictionary.Contains(defaultKey))
             {
@@ -84,18 +37,26 @@ internal static partial class VisualControlTypes
 
             dictionary[defaultKey] = defaultValue;
             context.ValueChanged(dictionary);
+            AddEntry(defaultKey, defaultValue);
+            dictionaryVBox.MoveChild(addButton, dictionaryVBox.GetChildCount() - 1);
+        };
+        dictionaryVBox.AddChild(addButton);
 
-            object oldKey = defaultKey;
+        return new VisualControlInfo(new VBoxContainerControl(dictionaryVBox));
 
-            VisualControlInfo valueControl = CreateControlForType(valueType, null, new VisualControlContext(context.SpinBoxes, defaultValue, v =>
+        void AddEntry(object key, object value)
+        {
+            object currentKey = key;
+
+            VisualControlInfo valueControl = CreateControlForType(valueType, null, new VisualControlContext(value, v =>
             {
-                dictionary[oldKey] = v;
+                dictionary[currentKey] = v;
                 context.ValueChanged(dictionary);
             }));
 
-            VisualControlInfo keyControl = CreateControlForType(keyType, null, new VisualControlContext(context.SpinBoxes, defaultKey, v =>
+            VisualControlInfo keyControl = CreateControlForType(keyType, null, new VisualControlContext(currentKey, v =>
             {
-                if (dictionary.Contains(v))
+                if (v == null || dictionary.Contains(v))
                 {
                     return;
                 }
@@ -105,37 +66,37 @@ internal static partial class VisualControlTypes
                     throw new ArgumentException($"[Visualize] Type mismatch: Expected {keyType}, got {v.GetType()}");
                 }
 
-                dictionary.Remove(oldKey);
-                dictionary[v] = defaultValue;
-                oldKey = v;
+                object currentValue = dictionary[currentKey];
+                dictionary.Remove(currentKey);
+                dictionary[v] = currentValue;
+                currentKey = v;
                 context.ValueChanged(dictionary);
-                SetControlValue(valueControl.VisualControl.Control, defaultValue);
+                valueControl.VisualControl.SetValue(defaultValue);
             }));
 
-            if (keyControl.VisualControl != null && valueControl.VisualControl != null)
+            if (keyControl.VisualControl == null || valueControl.VisualControl == null)
             {
-                Button removeKeyEntryButton = new() { Text = "-" };
-                HBoxContainer hbox = new();
-
-                removeKeyEntryButton.Pressed += () =>
-                {
-                    dictionaryVBox.RemoveChild(hbox);
-                    dictionary.Remove(oldKey);
-                    context.ValueChanged(dictionary);
-                };
-
-                hbox.AddChild(keyControl.VisualControl.Control);
-                hbox.AddChild(valueControl.VisualControl.Control);
-                hbox.AddChild(removeKeyEntryButton);
-                dictionaryVBox.AddChild(hbox);
-                dictionaryVBox.MoveChild(addButton, dictionaryVBox.GetChildCount() - 1);
+                return;
             }
+
+            keyControl.VisualControl.SetValue(currentKey);
+            valueControl.VisualControl.SetValue(value);
+
+            Button removeKeyEntryButton = new() { Text = "-" };
+            HBoxContainer hbox = new();
+
+            removeKeyEntryButton.Pressed += () =>
+            {
+                dictionaryVBox.RemoveChild(hbox);
+                dictionary.Remove(currentKey);
+                context.ValueChanged(dictionary);
+            };
+
+            hbox.AddChild(keyControl.VisualControl.Control);
+            hbox.AddChild(valueControl.VisualControl.Control);
+            hbox.AddChild(removeKeyEntryButton);
+            dictionaryVBox.AddChild(hbox);
         }
-
-        addButton.Pressed += AddNewEntryToDictionary;
-        dictionaryVBox.AddChild(addButton);
-
-        return new VisualControlInfo(new VBoxContainerControl(dictionaryVBox));
     }
 }
 #endif

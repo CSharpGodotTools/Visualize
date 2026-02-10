@@ -18,8 +18,6 @@ internal static class VisualizeAttributeHandler
     {
         Type type = specificNode.GetType();
 
-        VisualizeAttribute attribute = (VisualizeAttribute)type.GetCustomAttribute(typeof(VisualizeAttribute), false);
-
         List<PropertyInfo> properties = GetVisualMembers<PropertyInfo>(type.GetProperties);
         List<FieldInfo> fields = GetVisualMembers<FieldInfo>(type.GetFields);
         List<MethodInfo> methods = GetVisualMembers<MethodInfo>(type.GetMethods);

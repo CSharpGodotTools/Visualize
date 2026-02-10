@@ -1,6 +1,5 @@
 #if DEBUG
 using Godot;
-using System;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -15,11 +14,5 @@ internal class VisualData(Node node, IEnumerable<PropertyInfo> properties, IEnum
     public IEnumerable<PropertyInfo> Properties { get; } = properties;
     public IEnumerable<FieldInfo> Fields { get; } = fields;
     public IEnumerable<MethodInfo> Methods { get; } = methods;
-}
-
-internal class VisualSpinBox
-{
-    public SpinBox SpinBox { get; set; }
-    public Type Type { get; set; }
 }
 #endif

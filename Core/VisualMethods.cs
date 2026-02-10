@@ -15,7 +15,7 @@ internal static class VisualMethods
     /// <summary>
     /// Creates the UI needed for the method parameters
     /// </summary>
-    public static HBoxContainer CreateMethodParameterControls(MethodInfo method, List<VisualSpinBox> debugExportSpinBoxes, object[] providedValues)
+    public static HBoxContainer CreateMethodParameterControls(MethodInfo method, object[] providedValues)
     {
         HBoxContainer hboxParams = new();
 
@@ -30,7 +30,7 @@ internal static class VisualMethods
 
             int capturedIndex = i;
 
-            VisualControlInfo control = VisualControlTypes.CreateControlForType(paramType, null, new VisualControlContext(debugExportSpinBoxes, providedValues[i], v =>
+            VisualControlInfo control = VisualControlTypes.CreateControlForType(paramType, null, new VisualControlContext(providedValues[i], v =>
             {
                 providedValues[capturedIndex] = v;
             }));
@@ -45,7 +45,7 @@ internal static class VisualMethods
         return hboxParams;
     }
 
-    public static void AddMethodInfoElements(Control vbox, IEnumerable<MethodInfo> methods, Node node, List<VisualSpinBox> debugExportSpinBoxes)
+    public static void AddMethodInfoElements(Control vbox, IEnumerable<MethodInfo> methods, Node node)
     {
         foreach (MethodInfo method in methods)
         {
@@ -54,7 +54,7 @@ internal static class VisualMethods
                 ParameterInfo[] paramInfos = method.GetParameters();
                 object[] providedValues = new object[paramInfos.Length];
 
-                HBoxContainer hboxParams = CreateMethodParameterControls(method, debugExportSpinBoxes, providedValues);
+                HBoxContainer hboxParams = CreateMethodParameterControls(method, providedValues);
 
                 vbox.AddChild(hboxParams);
 

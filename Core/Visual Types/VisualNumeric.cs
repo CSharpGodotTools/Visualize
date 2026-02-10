@@ -8,7 +8,7 @@ namespace GodotUtils.Debugging;
 
 internal static partial class VisualControlTypes
 {
-    private const double DEFAULT_STEP_VALUE = 0.005;
+    private const double DefaultStepValue = 0.005;
 
     private static VisualControlInfo VisualNumeric(Type type, MemberInfo memberInfo, VisualControlContext context)
     {
@@ -62,7 +62,7 @@ internal static partial class VisualControlTypes
         if (!double.TryParse(args[1], out double maxValue))
             return false;
 
-        double stepValue = DEFAULT_STEP_VALUE;
+        double stepValue = DefaultStepValue;
 
         if (args.Length >= 3 && double.TryParse(args[2].Trim(), out double parsedStepValue))
         {
@@ -76,9 +76,9 @@ internal static partial class VisualControlTypes
 
     private class ExportAttributeRange(double minValue, double maxValue, double stepValue)
     {
-        public double MinValue { get; set; } = minValue;
-        public double MaxValue { get; set; } = maxValue;
-        public double StepValue { get; set; } = stepValue;
+        public double MinValue { get; } = minValue;
+        public double MaxValue { get; } = maxValue;
+        public double StepValue { get; } = stepValue;
     }
 }
 

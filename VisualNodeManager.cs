@@ -1,3 +1,4 @@
+#if DEBUG
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,6 @@ internal class VisualNodeManager
             (Control visualPanel, List<Action> actions) = VisualUI.CreateVisualPanel(visualData, readonlyMembers);
 
             ulong instanceId = node.GetInstanceId();
-
             Node positionalNode = GetClosestParentOfType(node, typeof(Node2D), typeof(Control));
 
             if (positionalNode == null)
@@ -27,26 +27,15 @@ internal class VisualNodeManager
                 PrintUtils.Warning($"[Visualize] No positional parent node could be found for {node.Name} so its visual panel will be created at position {DefaultOffset}");
             }
 
-            if (positionalNode != null)
+            if (!TryGetGlobalPosition(positionalNode, out Vector2 initialPosition))
             {
-                // Immediately set the visual panels position to the positional nodes position
-                if (positionalNode is Node2D node2D)
-                {
-                    visualPanel.GlobalPosition = node2D.GlobalPosition;
-                }
-                else if (positionalNode is Control control)
-                {
-                    visualPanel.GlobalPosition = control.GlobalPosition;
-                }
+                initialPosition = DefaultOffset;
             }
-            else
-            {
-                visualPanel.GlobalPosition = DefaultOffset;
-            }
+
+            visualPanel.GlobalPosition = initialPosition;
 
             // Ensure the added visual panel is not overlapping with any other visual panels
             IEnumerable<Control> controls = _nodeTrackers.Select(x => x.Value.VisualControl);
-
             Vector2 offset = Vector2.Zero;
 
             foreach (Control existingControl in controls)
@@ -64,10 +53,7 @@ internal class VisualNodeManager
             _nodeTrackers.Add(instanceId, new VisualNodeInfo(actions, visualPanel, positionalNode ?? node, offset));
         }
 
-        node.TreeExited += () =>
-        {
-            RemoveVisualNode(node);
-        };
+        node.TreeExited += () => RemoveVisualNode(node);
     }
 
     public void Update()
@@ -79,19 +65,11 @@ internal class VisualNodeManager
             Control visualControl = info.VisualControl;
 
             // Update position based on node type
-            if (node != null) // Checking null here every frame is costly. No need to update the position if the position never changes!
+            if (node != null && TryGetGlobalPosition(node, out Vector2 position))
             {
-                if (node is Node2D node2D)
-                {
-                    visualControl.GlobalPosition = node2D.GlobalPosition + info.Offset;
-                }
-                else if (node is Control control)
-                {
-                    visualControl.GlobalPosition = control.GlobalPosition + info.Offset;
-                }
+                visualControl.GlobalPosition = position + info.Offset;
             }
 
-            // Execute actions
             foreach (Action action in info.Actions)
             {
                 action();
@@ -109,6 +87,26 @@ internal class VisualNodeManager
             info.VisualControl.GetParent().QueueFree();
             _nodeTrackers.Remove(instanceId);
         }
+
+        VisualizeAutoload.Instance?.UnregisterNode(node);
+    }
+
+    private static bool TryGetGlobalPosition(Node node, out Vector2 position)
+    {
+        if (node is Node2D node2D)
+        {
+            position = node2D.GlobalPosition;
+            return true;
+        }
+
+        if (node is Control control)
+        {
+            position = control.GlobalPosition;
+            return true;
+        }
+
+        position = default;
+        return false;
     }
 
     private static Node GetClosestParentOfType(Node node, params Type[] typesToCheck)
@@ -153,3 +151,4 @@ internal class VisualNodeManager
         return rect1.Intersects(rect2);
     }
 }
+#endif

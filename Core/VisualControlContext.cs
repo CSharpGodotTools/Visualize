@@ -1,16 +1,14 @@
 #if DEBUG
 using System;
-using System.Collections.Generic;
 
 namespace GodotUtils.Debugging;
 
 /// <summary>
 /// Represents the context for a visual control
 /// </summary>
-internal class VisualControlContext(List<VisualSpinBox> spinBoxes, object initialValue, Action<object> valueChanged)
+internal class VisualControlContext(object initialValue, Action<object> valueChanged)
 {
-    public List<VisualSpinBox> SpinBoxes { get; set; } = spinBoxes;
-    public object InitialValue { get; set; } = initialValue;
-    public Action<object> ValueChanged { get; set; } = valueChanged;
+    public object InitialValue { get; } = initialValue;
+    public Action<object> ValueChanged { get; } = valueChanged ?? throw new ArgumentNullException(nameof(valueChanged));
 }
 #endif

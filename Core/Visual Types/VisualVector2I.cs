@@ -7,54 +7,24 @@ internal static partial class VisualControlTypes
 {
     private static VisualControlInfo VisualVector2I(VisualControlContext context)
     {
-        HBoxContainer vector2IHBox = new();
-
-        Vector2I vector2I = (Vector2I)context.InitialValue;
-
-        SpinBox spinBoxX = CreateSpinBox(typeof(int));
-        SpinBox spinBoxY = CreateSpinBox(typeof(int));
-
-        spinBoxX.Value = vector2I.X;
-        spinBoxY.Value = vector2I.Y;
-
-        spinBoxX.ValueChanged += value =>
-        {
-            vector2I.X = (int)value;
-            context.ValueChanged(vector2I);
-        };
-
-        spinBoxY.ValueChanged += value =>
-        {
-            vector2I.Y = (int)value;
-            context.ValueChanged(vector2I);
-        };
-
-        vector2IHBox.AddChild(new Label { Text = "X" });
-        vector2IHBox.AddChild(spinBoxX);
-        vector2IHBox.AddChild(new Label { Text = "Y" });
-        vector2IHBox.AddChild(spinBoxY);
-
-        return new VisualControlInfo(new Vector2IControl(vector2IHBox, spinBoxX, spinBoxY));
-    }
-
-    internal class Vector2IControl(HBoxContainer vector2IHBox, SpinBox spinBoxX, SpinBox spinBoxY) : IVisualControl
-    {
-        public void SetValue(object value)
-        {
-            if (value is Vector2I vector2I)
+        return CreateVectorControl<Vector2I>(
+            context,
+            ["X", "Y"],
+            typeof(int),
+            value => [value.X, value.Y],
+            (value, index, component) =>
             {
-                spinBoxX.Value = vector2I.X;
-                spinBoxY.Value = vector2I.Y;
-            }
-        }
+                if (index == 0)
+                {
+                    value.X = (int)component;
+                }
+                else
+                {
+                    value.Y = (int)component;
+                }
 
-        public Control Control => vector2IHBox;
-
-        public void SetEditable(bool editable)
-        {
-            spinBoxX.Editable = editable;
-            spinBoxY.Editable = editable;
-        }
+                return value;
+            });
     }
 }
 #endif

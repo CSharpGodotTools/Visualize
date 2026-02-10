@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using static Godot.Control;
 
@@ -31,8 +30,8 @@ internal static class VisualUI
     private static readonly Texture2D _eyeClosed = LoadEmbeddedTexture("Visualize.EyeClosed.png");
     private static readonly Texture2D _wrench = LoadEmbeddedTexture("Visualize.Wrench.png");
 
-    private static Color Green = new(0.8f, 1, 0.8f);
-    private static Color Pink = new(1.0f, 0.75f, 0.8f);
+    private static readonly Color Green = new(0.8f, 1, 0.8f);
+    private static readonly Color Pink = new(1.0f, 0.75f, 0.8f);
 
     /// <summary>
     /// Loads a PNG image embedded in the assembly as a resource and converts it into an ImageTexture.
@@ -61,9 +60,6 @@ internal static class VisualUI
     /// </summary>
     public static (Control, List<Action>) CreateVisualPanel(VisualData visualData, string[] readonlyMembers)
     {
-        Dictionary<Node, VBoxContainer> visualNodes = [];
-        
-        List<VisualSpinBox> spinBoxes = [];
         List<Action> updateControls = [];
 
         Node node = visualData.Node;
@@ -84,20 +80,20 @@ internal static class VisualUI
         readonlyMembersVbox.Name = "Readonly Members";
 
         // Readonly Members
-        AddReadonlyControls(readonlyMembers, node, readonlyMembersVbox, updateControls, spinBoxes);
+        AddReadonlyControls(readonlyMembers, node, readonlyMembersVbox, updateControls);
 
         // Mutable Members
-        AddMutableControls(mutableMembersVbox, visualData.Properties, node, spinBoxes);
-        AddMutableControls(mutableMembersVbox, visualData.Fields, node, spinBoxes);
+        AddMutableControls(mutableMembersVbox, visualData.Properties, node);
+        AddMutableControls(mutableMembersVbox, visualData.Fields, node);
 
         // Methods
-        VisualMethods.AddMethodInfoElements(mutableMembersVbox, visualData.Methods, node, spinBoxes);
+        VisualMethods.AddMethodInfoElements(mutableMembersVbox, visualData.Methods, node);
 
         VBoxContainer vboxLogs = new();
         vboxLogs.Name = "Logs";
         mutableMembersVbox.AddChild(vboxLogs);
 
-        visualNodes.Add(node, vboxLogs);
+        VisualizeAutoload.Instance?.RegisterLogContainer(node, vboxLogs);
 
         ScrollContainer scrollContainer = new()
         {
@@ -126,9 +122,6 @@ internal static class VisualUI
         canvasLayer.AddChild(panelContainer);
 
         node.CallDeferred(Node.MethodName.AddChild, canvasLayer);
-
-        // This is ugly but I don't know how else to do it
-        VisualizeAutoload.Instance.VisualNodes = visualNodes;
 
         return (panelContainer, updateControls);
     }
@@ -292,23 +285,28 @@ internal static class VisualUI
 
         if (property != null)
         {
-            initialValue = property.GetValue(property.GetGetMethod(true).IsStatic ? null : node);
-        }
-        else
-        {
-            field = node.GetType().GetField(visualMember, memberTypes);
-
-            if (field != null)
+            MethodInfo getter = property.GetGetMethod(true);
+            if (getter != null)
             {
-                initialValue = field.GetValue(field.IsStatic ? null : node);
+                initialValue = property.GetValue(getter.IsStatic ? null : node);
+                return;
             }
+
+            property = null;
+        }
+
+        field = node.GetType().GetField(visualMember, memberTypes);
+
+        if (field != null)
+        {
+            initialValue = field.GetValue(field.IsStatic ? null : node);
         }
     }
 
     /// <summary>
     /// Adds visual controls for specified members of a Internal.
     /// </summary>
-    private static void AddReadonlyControls(string[] visualizeMembers, Node node, Control readonlyMembers, List<Action> updateControls, List<VisualSpinBox> spinBoxes)
+    private static void AddReadonlyControls(string[] visualizeMembers, Node node, Control readonlyMembers, List<Action> updateControls)
     {
         if (visualizeMembers == null)
         {
@@ -327,11 +325,11 @@ internal static class VisualUI
 
             if (initialValue != null)
             {
-                AddReadonlyControl(visualMember, readonlyMembers, node, field, property, initialValue, updateControls, spinBoxes);
+                AddReadonlyControl(visualMember, readonlyMembers, node, field, property, initialValue, updateControls);
             }
             else
             {
-                _ = TryAddReadonlyControlAsync(visualMember, readonlyMembers, node, field, property, updateControls, spinBoxes);
+                _ = TryAddReadonlyControlAsync(visualMember, readonlyMembers, node, field, property, updateControls);
             }
         }
     }
@@ -350,14 +348,11 @@ internal static class VisualUI
     /// <summary>
     /// Asynchronously tries to add a visual control for a Internal member.
     /// </summary>
-    private static async Task TryAddReadonlyControlAsync(string visualMember, Control readonlyMembers, Node node, FieldInfo field, PropertyInfo property, List<Action> updateControls, List<VisualSpinBox> spinBoxes)
+    private static async Task TryAddReadonlyControlAsync(string visualMember, Control readonlyMembers, Node node, FieldInfo field, PropertyInfo property, List<Action> updateControls)
     {
-        CancellationTokenSource cts = new();
-        CancellationToken token = cts.Token;
-
         int elapsedSeconds = 0;
 
-        while (!token.IsCancellationRequested)
+        while (true)
         {
             object value = null;
 
@@ -372,36 +367,28 @@ internal static class VisualUI
 
             if (value != null)
             {
-                AddReadonlyControl(visualMember, readonlyMembers, node, field, property, value, updateControls, spinBoxes);
+                AddReadonlyControl(visualMember, readonlyMembers, node, field, property, value, updateControls);
                 break;
             }
 
-            try
-            {
-                const int OneSecondInMs = 1000;
-                await Task.Delay(OneSecondInMs, token);
-                elapsedSeconds++;
+            const int OneSecondInMs = 1000;
+            await Task.Delay(OneSecondInMs);
+            elapsedSeconds++;
 
-                if (elapsedSeconds == MaxSecondsToWaitForInitialValues)
+            if (elapsedSeconds == MaxSecondsToWaitForInitialValues)
+            {
+                string memberName = string.Empty;
+
+                if (field != null)
                 {
-                    string memberName = string.Empty;
-
-                    if (field != null)
-                    {
-                        memberName = field.Name;
-                    }
-                    else if (property != null)
-                    {
-                        memberName = property.Name;
-                    }
-
-                    GD.PrintRich($"[color=orange][Visualize] Tracking '{node.Name}' to see if '{memberName}' value changes[/color]");
+                    memberName = field.Name;
                 }
-            }
-            catch (TaskCanceledException)
-            {
-                // Task was cancelled, exit the loop
-                break;
+                else if (property != null)
+                {
+                    memberName = property.Name;
+                }
+
+                GD.PrintRich($"[color=orange][Visualize] Tracking '{node.Name}' to see if '{memberName}' value changes[/color]");
             }
         }
     }
@@ -409,18 +396,23 @@ internal static class VisualUI
     /// <summary>
     /// Adds a visual control to the UI for a Internal member.
     /// </summary>
-    private static void AddReadonlyControl(string visualMember, Control readonlyMembers, Node node, FieldInfo field, PropertyInfo property, object initialValue, List<Action> updateControls, List<VisualSpinBox> spinBoxes)
+    private static void AddReadonlyControl(string visualMember, Control readonlyMembers, Node node, FieldInfo field, PropertyInfo property, object initialValue, List<Action> updateControls)
     {
         Type memberType = property != null ? property.PropertyType : field.FieldType;
 
         MemberInfo member = property != null ? property : field;
 
-        VisualControlContext context = new(spinBoxes, initialValue, _ =>
+        VisualControlContext context = new(initialValue, _ =>
         {
             // Do nothing
         });
 
         VisualControlInfo visualControlInfo = VisualControlTypes.CreateControlForType(memberType, member, context);
+
+        if (visualControlInfo.VisualControl == null)
+        {
+            return;
+        }
 
         visualControlInfo.VisualControl.SetEditable(false);
 
@@ -445,11 +437,11 @@ internal static class VisualUI
     /// <summary>
     /// Adds member information elements to a VBoxContainer.
     /// </summary>
-    private static void AddMutableControls(Control vbox, IEnumerable<MemberInfo> members, Node node, List<VisualSpinBox> spinBoxes)
+    private static void AddMutableControls(Control vbox, IEnumerable<MemberInfo> members, Node node)
     {
         foreach (MemberInfo member in members)
         {
-            Control element = CreateMemberInfoElement(member, node, spinBoxes);
+            Control element = CreateMemberInfoElement(member, node);
 
             if (element != null)
                 vbox.AddChild(element);
@@ -459,7 +451,7 @@ internal static class VisualUI
     /// <summary>
     /// Creates a member information element for a specified Internal member.
     /// </summary>
-    private static Control CreateMemberInfoElement(MemberInfo member, Node node, List<VisualSpinBox> spinBoxes)
+    private static Control CreateMemberInfoElement(MemberInfo member, Node node)
     {
         Type type = VisualHandler.GetMemberType(member);
 
@@ -471,7 +463,7 @@ internal static class VisualUI
             return null;
         }
 
-        VisualControlInfo element = VisualControlTypes.CreateControlForType(type, member, new VisualControlContext(spinBoxes, initialValue, v => 
+        VisualControlInfo element = VisualControlTypes.CreateControlForType(type, member, new VisualControlContext(initialValue, v =>
         {
             VisualHandler.SetMemberValue(member, node, v);
         }));

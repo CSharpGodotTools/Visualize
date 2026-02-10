@@ -1,25 +1,28 @@
 #if DEBUG
 using Godot;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace GodotUtils.Debugging;
 
 /// <summary>
 /// This logger shows all messages in game making it easier to debug
-/// </summary> 
-public class Visualize
+/// </summary>
+public static class Visualize
 {
     private const int MaxLabelsVisible = 5;
     private static readonly VisualNodeManager _visualNodeManager = new();
 
     public static void Register(Node node, params string[] readonlyMembers)
     {
+        if (VisualizeAutoload.Instance == null)
+        {
+            PrintUtils.Warning("[Visualize] VisualizeAutoload is not initialized.");
+            return;
+        }
+
         _visualNodeManager.Register(node, readonlyMembers);
     }
 
-    public void Update()
+    public static void Update()
     {
         _visualNodeManager.Update();
     }
@@ -34,20 +37,23 @@ public class Visualize
 
     private static VBoxContainer GetOrCreateVBoxContainer(Node node)
     {
-        if (VisualizeAutoload.Instance.VisualNodes != null && VisualizeAutoload.Instance.VisualNodes.TryGetValue(node, out VBoxContainer vbox))
+        VisualizeAutoload autoload = VisualizeAutoload.Instance;
+
+        if (autoload == null)
+            return null;
+
+        if (autoload.TryGetLogContainer(node, out VBoxContainer vbox))
             return vbox;
 
         if (node is not Control and not Node2D)
             return null;
 
-        if (!VisualizeAutoload.Instance.VisualNodesWithoutVisualAttribute.TryGetValue(node, out vbox))
+        return autoload.GetOrCreateNonAttributeLogContainer(node, () =>
         {
-            vbox = new VBoxContainer { Scale = Vector2.One * VisualUI.VisualUiScaleFactor };
-            node.AddChild(vbox);
-            VisualizeAutoload.Instance.VisualNodesWithoutVisualAttribute[node] = vbox;
-        }
-
-        return vbox;
+            VBoxContainer container = new() { Scale = Vector2.One * VisualUI.VisualUiScaleFactor };
+            node.AddChild(container);
+            return container;
+        });
     }
 
     private static void AddLabel(VBoxContainer vbox, object message, double fadeTime)

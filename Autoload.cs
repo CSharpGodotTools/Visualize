@@ -1,3 +1,4 @@
+#if DEBUG
 using Godot;
 
 namespace GodotUtils.Debugging;
@@ -21,3 +22,4 @@ internal partial class Autoload : Node
         _visualizeAutoload.Dispose();
     }
 }
+#endif

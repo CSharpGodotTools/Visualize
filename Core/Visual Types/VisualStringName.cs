@@ -7,13 +7,10 @@ internal static partial class VisualControlTypes
 {
     private static VisualControlInfo VisualStringName(VisualControlContext context)
     {
-        StringName stringName = (StringName)context.InitialValue;
-        string initialText = stringName != null ? stringName.ToString() : string.Empty;
-
-        LineEdit lineEdit = new() { Text = initialText };
-        lineEdit.TextChanged += text => context.ValueChanged(new StringName(text));
-
-        return new VisualControlInfo(new LineEditControl(lineEdit));
+        return CreateTextControl(
+            context,
+            text => new StringName(text),
+            value => value is StringName name ? name.ToString() : string.Empty);
     }
 }
 #endif
