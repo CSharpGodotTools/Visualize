@@ -27,30 +27,4 @@
 		</Reference>
 	</ItemGroup>
 
-	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(EnableGodotUtilsPostBuild)' == 'true'">
-
-		<ItemGroup>
-			<GodotTargets Include="$(GodotProject1)" Condition="'$(GodotProject1)' != ''" />
-			<GodotTargets Include="$(GodotProject2)" Condition="'$(GodotProject2)' != ''" />
-			<GodotTargets Include="$(GodotProject3)" Condition="'$(GodotProject3)' != ''" />
-		</ItemGroup>
-
-		<!-- Separate existing and missing projects -->
-		<ItemGroup>
-			<ValidGodotTargets Include="@(GodotTargets)" Condition="Exists('%(GodotTargets.Identity)')" />
-			<MissingGodotTargets Include="@(GodotTargets)" Condition="!Exists('%(GodotTargets.Identity)')" />
-		</ItemGroup>
-
-		<!-- Warn about missing projects -->
-		<Message Condition="@(MissingGodotTargets->Count()) &gt; 0" Text="Warning: The following Godot projects were not found: @(MissingGodotTargets, ', ')" Importance="High" />
-
-		<!-- Copy files to all valid projects -->
-		<ItemGroup>
-			<GodotCopyDirs Include="@(ValidGodotTargets->'%(Identity)\addons')" />
-		</ItemGroup>
-
-		<MakeDir Directories="@(GodotCopyDirs)" />
-		<Copy SourceFiles="$(TargetDir)Visualize.dll" DestinationFolder="%(GodotCopyDirs.Identity)" SkipUnchangedFiles="true" />
-		<Copy SourceFiles="$(TargetDir)Visualize.xml" DestinationFolder="%(GodotCopyDirs.Identity)" SkipUnchangedFiles="true" />
-	</Target>
 </Project>
