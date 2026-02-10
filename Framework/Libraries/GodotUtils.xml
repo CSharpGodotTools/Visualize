@@ -555,7 +555,7 @@
             Creates a timer bound to <paramref name="node"/> that invokes <paramref name="timeout"/> after <paramref name="seconds"/> and removes itself if <paramref name="oneShot"/> is true. Since the timer is bound to the node, it will get removed if the node is removed.
             </summary>
         </member>
-        <member name="M:GodotUtils.GpuParticle2DFactory.OneShot(Godot.Node,Godot.PackedScene)">
+        <member name="M:GodotUtils.GpuParticleFactory2D.OneShot(Godot.Node,Godot.PackedScene)">
             <summary>
             Instantiates a GPUParticles2D scene as a one-shot effect, frees it automatically when
             emission finishes, and adds it as a child of the given parent node.
@@ -564,7 +564,7 @@
             <param name="particleScene">A PackedScene that instantiates to a GPUParticles2D.</param>
             <returns>The instantiated and configured GPUParticles2D.</returns>
         </member>
-        <member name="M:GodotUtils.GpuParticle2DFactory.Looping(Godot.Node,Godot.PackedScene)">
+        <member name="M:GodotUtils.GpuParticleFactory2D.Looping(Godot.Node,Godot.PackedScene)">
             <summary>
             Instantiates a GPUParticles2D scene as a looping effect, does not automatically free it,
             and adds it as a child of the given parent node.
@@ -572,6 +572,353 @@
             <param name="parent">The node that will own the instantiated particle node.</param>
             <param name="particleScene">A PackedScene that instantiates to a GPUParticles2D.</param>
             <returns>The instantiated and configured GPUParticles2D.</returns>
+        </member>
+        <member name="T:GodotUtils.BaseTween`1">
+            <summary>
+            Base class that implements the API shared by all Godot tween builders.
+            </summary>
+        </member>
+        <member name="F:GodotUtils.BaseTween`1._node">
+            <summary>The <see cref="T:Godot.Node"/> that the tween will operate on.</summary>
+        </member>
+        <member name="F:GodotUtils.BaseTween`1._tween">
+            <summary>The underlying <see cref="T:Godot.Tween"/> instance used for all tween operations.</summary>
+        </member>
+        <member name="F:GodotUtils.BaseTween`1._tweener">
+            <summary>
+            The currently active <see cref="T:Godot.PropertyTweener"/> that allows configuration of
+            transition and ease types. It is created when <c>Animate(...)</c> is called.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.#ctor(Godot.Node)">
+            <summary>
+            Creates a new tween builder bound to the specified <paramref name="node"/>.
+            The internal <see cref="T:Godot.Tween"/> is freshly instantiated and set to
+            <see cref="F:Godot.Tween.TweenProcessMode.Physics"/> to keep physics‑driven objects (e.g. cameras) in sync.
+            </summary>
+            <param name="node">The node that will be animated.</param>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.Property(System.String,Godot.Variant,System.Double)">
+            <summary>
+            Animates the specified <paramref name="property"/> of the bound <see cref="T:Godot.Node"/>.
+            The tween uses a <see cref="F:Godot.Tween.TransitionType.Sine"/> transition by default.
+            
+            <code>
+            var tween = new <see cref="T:GodotUtils.NodeTween2D"/>(this);
+            tween.Animate(ColorRect.PropertyName.Color, Colors.Transparent, 0.5);
+            </code>
+            
+            </summary>
+            
+            <param name="property">
+            The name of the property to animate (e.g. <c>ColorRect.PropertyName.Color</c>).
+            </param>
+            
+            <param name="finalValue">The value the property should reach.</param>
+            
+            <param name="duration">How long, in seconds, the animation should take.</param>
+            
+            <returns>The current <see cref="T:GodotUtils.NodeTween2D"/> instance for chaining.</returns>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.SetProcessMode(Godot.Tween.TweenProcessMode)">
+            <summary>Sets the <see cref="T:Godot.Tween"/> processing mode to the specified <paramref name="mode"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.Loop(System.Int32)">
+            <summary>
+            Sets the animation to repeat
+            </summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.Parallel">
+            <summary>
+            <para>Makes the next <see cref="T:Godot.Tweener"/> run parallelly to the previous one.</para>
+            <para><b>Example:</b></para>
+            <para><code>
+            GTween tween = new(...);
+            tween.Animate(...);
+            tween.Parallel().Animate(...);
+            tween.Parallel().Animate(...);
+            </code></para>
+            <para>All <see cref="T:Godot.Tweener"/>s in the example will run at the same time.</para>
+            <para>You can make the <see cref="T:Godot.Tween"/> parallel by default by using <see cref="M:Godot.Tween.SetParallel(System.Boolean)"/>.</para>
+            </summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.SetParallel(System.Boolean)">
+            <summary>
+            <para>If <paramref name="parallel"/> is <see langword="true"/>, the <see cref="T:Godot.Tweener"/>s appended after this method will by default run simultaneously, as opposed to sequentially.</para>
+            <para><code>
+            tween.SetParallel()
+            tween.Animate(...)
+            tween.Animate(...)
+            </code></para>
+            </summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.Then(System.Action)">
+            <summary>Registers a callback to be invoked when the tween reaches this point in the chain.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.Delay(System.Double)">
+            <summary>Inserts a delay in <paramref name="seconds"/> before the next tween step.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.Finished(System.Action)">
+            <summary>
+            A <paramref name="callback"/> is executed when the tween has finished
+            </summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.Stop">
+            <summary>
+            If the tween is looping, this can be used to stop it
+            </summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.Pause">
+            <summary>
+            Pause the tween
+            </summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.Resume">
+            <summary>
+            If the tween was paused with Pause(), resume it with Resume()
+            </summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.SetTrans(Godot.Tween.TransitionType)">
+            <summary>
+            Sets the transition type of the current <see cref="T:Godot.PropertyTweener"/> to the specified <paramref name="transType"/>.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.SetEase(Godot.Tween.EaseType)">
+            <summary>
+            Sets the ease type of the current <see cref="T:Godot.PropertyTweener"/> to the specified <paramref name="easeType"/>.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.TransLinear">
+            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Linear"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.TransBack">
+            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Back"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.TransSine">
+            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Sine"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.TransBounce">
+            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Bounce"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.TransCirc">
+            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Circ"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.TransCubic">
+            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Cubic"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.TransElastic">
+            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Elastic"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.TransExpo">
+            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Expo"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.TransQuad">
+            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Quad"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.TransQuart">
+            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Quart"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.TransQuint">
+            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Quint"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.TransSpring">
+            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Spring"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.EaseIn">
+            <summary>Sets the ease type to <see cref="F:Godot.Tween.EaseType.In"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.EaseOut">
+            <summary>Sets the ease type to <see cref="F:Godot.Tween.EaseType.Out"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.EaseInOut">
+            <summary>Sets the ease type to <see cref="F:Godot.Tween.EaseType.InOut"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.EaseOutIn">
+            <summary>Sets the ease type to <see cref="F:Godot.Tween.EaseType.OutIn"/>.</summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.IsRunning">
+            <summary>
+            Checks if the tween is still playing
+            </summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.Kill">
+            <summary>
+            Kill the tween
+            </summary>
+        </member>
+        <member name="M:GodotUtils.BaseTween`1.UpdateTweener(System.String,System.Action)">
+            <summary>
+            Executes the supplied <paramref name="action"/> on the current <see cref="T:Godot.PropertyTweener"/>.
+            Throws an exception if no tweener has been created (i.e., <c>Animate(...)</c> has not been called yet).
+            </summary>
+        </member>
+        <member name="M:GodotUtils.Tweens.Animate(Godot.Node)">
+            <summary>
+            Creates a <see cref="T:GodotUtils.NodeTween"/> bound to <paramref name="node"/>.
+            </summary>
+            <returns>The <see cref="T:GodotUtils.NodeTween"/> for chain building.</returns>
+        </member>
+        <member name="M:GodotUtils.Tweens.Animate(Godot.Node,System.String)">
+            <summary>
+            Creates a <see cref="T:GodotUtils.NodeTweenProp"/> bound to <paramref name="node"/> ready to animate on <paramref name="property"/>.
+            </summary>
+            <returns>The <see cref="T:GodotUtils.NodeTweenProp"/> for chain building.</returns>
+        </member>
+        <member name="M:GodotUtils.Tweens.Animate(Godot.Node2D)">
+            <summary>
+            Creates a <see cref="T:GodotUtils.NodeTween2D"/> bound to <paramref name="node"/>.
+            </summary>
+            <returns>The <see cref="T:GodotUtils.NodeTween2D"/> for chain building.</returns>
+        </member>
+        <member name="M:GodotUtils.Tweens.Animate(Godot.Control)">
+            <summary>
+            Creates a <see cref="T:GodotUtils.NodeTweenControl"/> bound to <paramref name="control"/>.
+            </summary>
+            <returns>The <see cref="T:GodotUtils.NodeTweenControl"/> for chain building.</returns>
+        </member>
+        <member name="M:GodotUtils.Tweens.AnimateShader(Godot.CanvasItem)">
+            <summary>
+            Creates a <see cref="T:GodotUtils.ShaderTween"/> bound to <paramref name="canvasItem"/>.
+            </summary>
+            <returns>The <see cref="T:GodotUtils.ShaderTween"/> for chain building.</returns>
+        </member>
+        <member name="M:GodotUtils.Tweens.AnimateShader(Godot.CanvasItem,System.String)">
+            <summary>
+            Creates a <see cref="T:GodotUtils.ShaderTween"/> bound to <paramref name="canvasItem"/> ready to animate <paramref name="property"/>.
+            </summary>
+            <returns>The <see cref="T:GodotUtils.ShaderTween"/> for chain building.</returns>
+        </member>
+        <member name="M:GodotUtils.Tweens.Animate(Godot.Node2D,System.String)">
+            <summary>
+            Creates a tween bound to <paramref name="node"/> ready to animate on the <paramref name="property"/>.
+            </summary>
+            <returns>The tween for chain building.</returns>
+        </member>
+        <member name="M:GodotUtils.Tweens.Animate(Godot.Control,System.String)">
+            <summary>
+            Creates a tween bound to <paramref name="control"/> ready to animate on the <paramref name="property"/>.
+            </summary>
+            <returns>The tween for chain building.</returns>
+        </member>
+        <member name="M:GodotUtils.Tweens.Delay(Godot.Node,System.Double,System.Action)">
+            <summary>
+            Creates a <see cref="T:GodotUtils.NodeTween"/> bound to <paramref name="node"/> and runs <paramref name="callback"/> after <paramref name="seconds"/>.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.Tweens.Delay(Godot.Node2D,System.Double,System.Action)">
+            <summary>
+            Creates a <see cref="T:GodotUtils.NodeTween2D"/> bound to <paramref name="node"/> and runs <paramref name="callback"/> after <paramref name="seconds"/>.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.Tweens.Delay(Godot.Control,System.Double,System.Action)">
+            <summary>
+            Creates a <see cref="T:GodotUtils.NodeTweenControl"/> bound to <paramref name="control"/> and runs <paramref name="callback"/> after <paramref name="seconds"/>.
+            </summary>
+        </member>
+        <member name="T:GodotUtils.NodeTween2D">
+            <summary>
+            Provides tweening functionality for Node2D properties.
+            </summary>
+        </member>
+        <member name="T:GodotUtils.NodeTweenControl">
+            <summary>
+            Provides tweening functionality for Control properties.
+            </summary>
+        </member>
+        <member name="T:GodotUtils.NodeTweenProp">
+            <summary>
+            Provides an API for animating a property of a <see cref="T:Godot.Node"/> using Godot’s Tween system.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.NodeTweenProp.PropertyTo(Godot.Variant,System.Double)">
+            <summary>
+            Animates the specified property of the bound <see cref="T:Godot.Node"/>.
+            The tween uses a <see cref="F:Godot.Tween.TransitionType.Sine"/> transition by default.
+            <code>
+            Tweens.Animate(this, ColorRect.PropertyName.Color);
+            tween.PropertyTo(Colors.Red, 0.5);
+            tween.PropertyTo(Colors.Green, 0.5);
+            tween.PropertyTo(Colors.Blue, 0.5);
+            </code>
+            </summary>
+            <param name="finalValue">The value the property should reach.</param>
+            <param name="duration">How long, in seconds, the animation should take.</param>
+            <returns>The current <see cref="T:GodotUtils.NodeTweenProp"/> instance for chaining.</returns>
+        </member>
+        <member name="T:GodotUtils.ShaderTween">
+            <summary>
+            Provides an API for animating shader parameters of a <see cref="T:Godot.ShaderMaterial"/>
+            attached to a <see cref="T:Godot.Node2D"/> using Godot’s Tween system.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.ShaderTween.#ctor(Godot.CanvasItem)">
+            <summary>
+            Creates a new <see cref="T:GodotUtils.ShaderTween"/> bound to <paramref name="canvasItem"/>.
+            The node must have a <see cref="T:Godot.ShaderMaterial"/> assigned to its <c>Material</c> property.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.ShaderTween.Property(System.String,Godot.Variant,System.Double)">
+            <summary>
+            Animates the shader parameter identified by <paramref name="shaderParam"/>.
+            The tween uses a <see cref="F:Godot.Tween.TransitionType.Sine"/> transition by default.
+            
+            <code>
+            var tween = new <see cref="T:GodotUtils.ShaderTween"/>(this);
+            tween.Animate("blend_intensity", 1.0f, 2.0);
+            </code>
+            
+            </summary>
+            
+            <param name="shaderParam">
+            The name of the shader uniform to animate (e.g. <c>"blend_intensity"</c>).
+            </param>
+            
+            <param name="finalValue">The value the shader parameter should reach.</param>
+            
+            <param name="duration">How long, in seconds, the animation should take.</param>
+            
+            <returns>The current <see cref="T:GodotUtils.ShaderTween"/> instance for chaining.</returns>
+        </member>
+        <member name="T:GodotUtils.ShaderTweenProp">
+            <summary>
+            Fluent API for animating a *single* shader‑parameter of a <see cref="T:Godot.ShaderMaterial"/>
+            attached to a <see cref="T:Godot.Node2D"/>.  
+            The shader‑parameter name is supplied to the constructor, so the <c>Animate</c> method
+            only needs the target value and the duration.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.ShaderTweenProp.#ctor(Godot.Node,System.String)">
+            <summary>
+            Creates a new <see cref="T:GodotUtils.ShaderTweenProp"/> bound to <paramref name="node"/>
+            and pre‑selects the shader‑parameter <paramref name="shaderParam"/> that will be animated.
+            </summary>
+            <param name="node">
+            The <see cref="T:Godot.Node2D"/> whose <c>Material</c> must be a <see cref="T:Godot.ShaderMaterial"/>.
+            </param>
+            <param name="shaderParam">
+            The name of the shader uniform to animate (e.g. <c>"blend_intensity"</c>).
+            </param>
+            <exception cref="T:System.Exception">
+            Thrown when the supplied <paramref name="node"/> does not have a <see cref="T:Godot.ShaderMaterial"/>
+            assigned to its <c>Material</c> property.
+            </exception>
+        </member>
+        <member name="M:GodotUtils.ShaderTweenProp.PropertyTo(Godot.Variant,System.Double)">
+            <summary>
+            Animates the shader‑parameter supplied to the constructor.
+            The tween uses a <see cref="F:Godot.Tween.TransitionType.Sine"/> transition by default.
+            
+            <code>
+            var tween = new GodotShaderTweenProperty(this, "blend_intensity");
+            tween.Animate(1.0f, 2.0);
+            </code>
+            
+            </summary>
+            <param name="finalValue">The value the shader parameter should reach.</param>
+            <param name="duration">
+            How long, in seconds, the animation should take.
+            </param>
+            <returns>The current <see cref="T:GodotUtils.ShaderTweenProp"/> instance for chaining.</returns>
         </member>
         <member name="T:GodotUtils.CacheManager`2">
             <summary>
@@ -602,6 +949,12 @@
         <member name="M:GodotUtils.ColorUtils.Random(System.Int32)">
             <summary>
             Generate a random color
+            </summary>
+        </member>
+        <member name="T:GodotUtils.ComponentManager">
+            <summary>
+            Using any kind of Godot functions from C# is expensive, so we try to minimize this with centralized logic.
+            See <see href="https://www.reddit.com/r/godot/comments/1me7669/a_follow_up_to_my_first_c_stress_test/">stress test results</see>.
             </summary>
         </member>
         <member name="T:GodotUtils.CursorUtils">
@@ -661,40 +1014,6 @@
             This script is like the Godot OS class in a way
             </summary>
         </member>
-        <member name="T:GodotUtils.GodotNodePool`1">
-            <summary>
-            Reuses nodes to reduce allocations and improve performance.
-            Nodes are automatically added to the specified parent when created.
-            </summary>
-            <typeparam name="TValue">The type of node managed by the pool.</typeparam>
-        </member>
-        <member name="M:GodotUtils.GodotNodePool`1.#ctor(Godot.Node,System.Func{`0})">
-            <summary>
-            Reuses nodes to reduce allocations and improve performance.
-            Nodes are automatically added to the specified parent when created.
-            </summary>
-            <typeparam name="TValue">The type of node managed by the pool.</typeparam>
-        </member>
-        <member name="P:GodotUtils.GodotNodePool`1.ActiveNodes">
-            <summary>
-            Nodes currently in use by the pool.
-            </summary>
-        </member>
-        <member name="M:GodotUtils.GodotNodePool`1.Get">
-            <summary>
-            Returns an available node or creates a new one if all are in use.
-            </summary>
-        </member>
-        <member name="M:GodotUtils.GodotNodePool`1.Release(`0)">
-            <summary>
-            Releases a node from the pool.
-            </summary>
-        </member>
-        <member name="M:GodotUtils.GodotNodePool`1.Clear">
-            <summary>
-            Removes all nodes from the pool and queue frees them.
-            </summary>
-        </member>
         <member name="T:GodotUtils.GodotObjectCache`1">
             <summary>
             Stores objects by their instance ID and returns the cached instance if it already exists.
@@ -733,6 +1052,174 @@
             collision layer you would do the following.</para>
             
             <code>player.CollisionLayer = GU.GetLayerValues(1, 4, 5)</code>
+            </summary>
+        </member>
+        <member name="T:GodotUtils.ComponentPool`1">
+            <summary>
+            Creates a pool of nodes to eliminate expensive QueueFree calls.
+            <code>
+            // Create the pool
+            GodotPool pool = new(parentNode, () => projectilePackedScene.Instantiate());
+            
+            // Get a projectile from the pool
+            Projectile projectile = pool.Acquire();
+            
+            // Projectile goes off screen or dies
+            projectile.Release(); // Never use QueueFree()
+            </code>
+            </summary>
+            <typeparam name="TNode">The nodes managed in the pool.</typeparam>
+        </member>
+        <member name="P:GodotUtils.ComponentPool`1.ActiveNodes">
+            <summary>
+            Nodes currently in use by the pool.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.ComponentPool`1.#ctor(Godot.Node,System.Func{`0})">
+            <summary>
+            Creates a pool of nodes using <paramref name="createNodeFunc"/> and attaches them as children of <paramref name="parent"/> to avoid expensive <c>QueueFree()</c> calls.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.ComponentPool`1.Acquire">
+            <summary>
+            Returns an available <typeparamref name="TNode"/> or creates a new one if all are in use.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.ComponentPool`1.Release(`0)">
+            <summary>
+            Releases the <paramref name="node"/> from the pool.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.ComponentPool`1.QueueFreeAll">
+            <summary>
+            Queue frees all inactive and active nodes in the pool.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.IComponentPoolable`1.OnCreate(GodotUtils.ComponentPool{`0})">
+            <summary>
+            Invoked when a new <typeparamref name="TNode"/> is created.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.IPoolable`1.OnCreate(GodotUtils.LifecyclePool{`0})">
+            <summary>
+            Invoked when a new <typeparamref name="TNode"/> is created.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.IPoolable`1.OnAcquire">
+            <summary>
+            Invoked when a <typeparamref name="TNode"/> is aquired with <c><see cref="T:GodotUtils.PoolCore`1"/>.Get()</c>
+            </summary>
+        </member>
+        <member name="M:GodotUtils.IPoolable`1.OnRelease">
+            <summary>
+            Invoked when a <typeparamref name="TNode"/> is released from the pool.
+            </summary>
+        </member>
+        <member name="T:GodotUtils.LifecyclePool`1">
+            <summary>
+            Creates a pool of nodes to eliminate expensive QueueFree calls.
+            <code>
+            // Create the pool
+            GodotPool pool = new(parentNode, () => projectilePackedScene.Instantiate());
+            
+            // Get a projectile from the pool
+            Projectile projectile = pool.Acquire();
+            
+            // Projectile goes off screen or dies
+            projectile.Release(); // Never use QueueFree()
+            </code>
+            </summary>
+            <typeparam name="TNode">The nodes managed in the pool.</typeparam>
+        </member>
+        <member name="P:GodotUtils.LifecyclePool`1.ActiveNodes">
+            <summary>
+            Nodes currently in use by the pool.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.LifecyclePool`1.#ctor(Godot.Node,System.Func{`0})">
+            <summary>
+            Creates a pool of nodes using <paramref name="createNodeFunc"/> and attaches them as children of <paramref name="parent"/> to avoid expensive <c>QueueFree()</c> calls.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.LifecyclePool`1.Acquire">
+            <summary>
+            Returns an available <typeparamref name="TNode"/> or creates a new one if all are in use.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.LifecyclePool`1.Release(`0)">
+            <summary>
+            Releases the <paramref name="node"/> from the pool.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.LifecyclePool`1.QueueFreeAll">
+            <summary>
+            Queue frees all inactive and active nodes in the pool.
+            </summary>
+        </member>
+        <member name="T:GodotUtils.Pool`1">
+            <summary>
+            Creates a pool of nodes to eliminate expensive QueueFree calls.
+            <code>
+            // Create the pool
+            GodotPool pool = new(parentNode, () => projectilePackedScene.Instantiate());
+            
+            // Get a projectile from the pool
+            Projectile projectile = pool.Acquire();
+            
+            // Projectile goes off screen or dies
+            projectile.Release(); // Never use QueueFree()
+            </code>
+            </summary>
+            <typeparam name="TNode">The nodes managed in the pool.</typeparam>
+        </member>
+        <member name="P:GodotUtils.Pool`1.ActiveNodes">
+            <summary>
+            Nodes currently in use by the pool.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.Pool`1.#ctor(Godot.Node,System.Func{`0})">
+            <summary>
+            Creates a pool of nodes using <paramref name="createNodeFunc"/> and attaches them as children of <paramref name="parent"/> to avoid expensive <c>QueueFree()</c> calls.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.Pool`1.Acquire">
+            <summary>
+            Returns an available <typeparamref name="TNode"/> or creates a new one if all are in use.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.Pool`1.Release(`0)">
+            <summary>
+            Releases the <paramref name="node"/> from the pool.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.Pool`1.QueueFreeAll">
+            <summary>
+            Queue frees all inactive and active nodes in the pool.
+            </summary>
+        </member>
+        <member name="P:GodotUtils.PoolCore`1.ActiveNodes">
+            <summary>
+            Nodes currently in use by the pool.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.PoolCore`1.#ctor(Godot.Node,System.Func{`0})">
+            <summary>
+            Creates a pool of nodes using <paramref name="createNodeFunc"/> and attaches them as children of <paramref name="parent"/> to avoid expensive <c>QueueFree()</c> calls.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.PoolCore`1.Acquire(System.Action{`0},System.Action{`0})">
+            <summary>
+            Returns an available <typeparamref name="TNode"/> or creates a new one if all are in use.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.PoolCore`1.Release(`0,System.Action{`0})">
+            <summary>
+            Releases the <paramref name="node"/> from the pool.
+            </summary>
+        </member>
+        <member name="M:GodotUtils.PoolCore`1.QueueFreeAll">
+            <summary>
+            Queue frees all inactive and active nodes in the pool.
             </summary>
         </member>
         <member name="M:GodotUtils.RegEx.RegexUtils.ScriptPath">
@@ -877,429 +1364,9 @@
             Cached StringNames for the signals contained in this class, for fast lookup.
             </summary>
         </member>
-        <member name="T:GodotUtils.BaseTween`1">
-            <summary>
-            Base class that implements the API shared by all Godot tween builders.
-            </summary>
-            <typeparam name="TSelf">
-            The concrete subclass type (e.g. <see cref="T:GodotUtils.NodeTween"/> or <see cref="T:GodotUtils.NodeTweenProp"/>).
-            </typeparam>
-        </member>
-        <member name="F:GodotUtils.BaseTween`1._node">
-            <summary>The <see cref="T:Godot.Node"/> that the tween will operate on.</summary>
-        </member>
-        <member name="F:GodotUtils.BaseTween`1._tween">
-            <summary>The underlying <see cref="T:Godot.Tween"/> instance used for all tween operations.</summary>
-        </member>
-        <member name="F:GodotUtils.BaseTween`1._tweener">
-            <summary>
-            The currently active <see cref="T:Godot.PropertyTweener"/> that allows configuration of
-            transition and ease types. It is created when <c>Animate(...)</c> is called.
-            </summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.#ctor(Godot.Node)">
-            <summary>
-            Creates a new tween builder bound to the specified <paramref name="node"/>.
-            The internal <see cref="T:Godot.Tween"/> is freshly instantiated and set to
-            <see cref="F:Godot.Tween.TweenProcessMode.Physics"/> to keep physics‑driven objects (e.g. cameras) in sync.
-            </summary>
-            <param name="node">The node that will be animated.</param>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.Delay(Godot.Node,System.Double,System.Action)">
-            <summary>
-            A delay in <paramref name="seconds"/> followed by a <paramref name="callback"/>
-            </summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.SetProcessMode(Godot.Tween.TweenProcessMode)">
-            <summary>Sets the <see cref="T:Godot.Tween"/> processing mode to the specified <paramref name="mode"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.Loop(System.Int32)">
-            <summary>
-            Sets the animation to repeat
-            </summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.Parallel">
-            <summary>
-            <para>Makes the next <see cref="T:Godot.Tweener"/> run parallelly to the previous one.</para>
-            <para><b>Example:</b></para>
-            <para><code>
-            GTween tween = new(...);
-            tween.Animate(...);
-            tween.Parallel().Animate(...);
-            tween.Parallel().Animate(...);
-            </code></para>
-            <para>All <see cref="T:Godot.Tweener"/>s in the example will run at the same time.</para>
-            <para>You can make the <see cref="T:Godot.Tween"/> parallel by default by using <see cref="M:Godot.Tween.SetParallel(System.Boolean)"/>.</para>
-            </summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.SetParallel(System.Boolean)">
-            <summary>
-            <para>If <paramref name="parallel"/> is <see langword="true"/>, the <see cref="T:Godot.Tweener"/>s appended after this method will by default run simultaneously, as opposed to sequentially.</para>
-            <para><code>
-            tween.SetParallel()
-            tween.Animate(...)
-            tween.Animate(...)
-            </code></para>
-            </summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.Callback(System.Action)">
-            <summary>Registers a callback to be invoked when the tween reaches this point in the chain.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.Delay(System.Double)">
-            <summary>Inserts a delay in <paramref name="seconds"/> before the next tween step.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.Finished(System.Action)">
-            <summary>
-            A <paramref name="callback"/> is executed when the tween has finished
-            </summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.Stop">
-            <summary>
-            If the tween is looping, this can be used to stop it
-            </summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.Pause">
-            <summary>
-            Pause the tween
-            </summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.Resume">
-            <summary>
-            If the tween was paused with Pause(), resume it with Resume()
-            </summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.SetTrans(Godot.Tween.TransitionType)">
-            <summary>
-            Sets the transition type of the current <see cref="T:Godot.PropertyTweener"/> to the specified <paramref name="transType"/>.
-            </summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.SetEase(Godot.Tween.EaseType)">
-            <summary>
-            Sets the ease type of the current <see cref="T:Godot.PropertyTweener"/> to the specified <paramref name="easeType"/>.
-            </summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.TransLinear">
-            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Linear"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.TransBack">
-            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Back"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.TransSine">
-            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Sine"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.TransBounce">
-            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Bounce"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.TransCirc">
-            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Circ"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.TransCubic">
-            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Cubic"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.TransElastic">
-            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Elastic"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.TransExpo">
-            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Expo"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.TransQuad">
-            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Quad"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.TransQuart">
-            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Quart"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.TransQuint">
-            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Quint"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.TransSpring">
-            <summary>Sets the transition type to <see cref="F:Godot.Tween.TransitionType.Spring"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.EaseIn">
-            <summary>Sets the ease type to <see cref="F:Godot.Tween.EaseType.In"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.EaseOut">
-            <summary>Sets the ease type to <see cref="F:Godot.Tween.EaseType.Out"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.EaseInOut">
-            <summary>Sets the ease type to <see cref="F:Godot.Tween.EaseType.InOut"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.EaseOutIn">
-            <summary>Sets the ease type to <see cref="F:Godot.Tween.EaseType.OutIn"/>.</summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.IsRunning">
-            <summary>
-            Checks if the tween is still playing
-            </summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.Kill">
-            <summary>
-            Kill the tween
-            </summary>
-        </member>
-        <member name="M:GodotUtils.BaseTween`1.UpdateTweener(System.String,System.Action)">
-            <summary>
-            Executes the supplied <paramref name="action"/> on the current <see cref="T:Godot.PropertyTweener"/>.
-            Throws an exception if no tweener has been created (i.e., <c>Animate(...)</c> has not been called yet).
-            </summary>
-        </member>
-        <member name="P:GodotUtils.BaseTween`1.Self">
-            <summary>Provides a strongly‑typed reference to the concrete subclass (used for chaining).</summary>
-        </member>
-        <member name="T:GodotUtils.NodeTween">
-            <summary>
-            Provides an API for animating a property of a <see cref="T:Godot.Node"/> using Godot’s Tween system.
-            </summary>
-        </member>
-        <member name="M:GodotUtils.NodeTween.#ctor(Godot.Node)">
-            <summary>
-            Provides an API for animating a property of a <see cref="T:Godot.Node"/> using Godot’s Tween system.
-            </summary>
-        </member>
-        <member name="M:GodotUtils.NodeTween.Animate(System.String,Godot.Variant,System.Double)">
-            <summary>
-            Animates the specified <paramref name="property"/> of the bound <see cref="T:Godot.Node"/>.
-            The tween uses a <see cref="F:Godot.Tween.TransitionType.Sine"/> transition by default.
-            
-            <code>
-            var tween = new <see cref="T:GodotUtils.NodeTween"/>(this);
-            tween.Animate(ColorRect.PropertyName.Color, Colors.Transparent, 0.5);
-            </code>
-            
-            </summary>
-            
-            <param name="property">
-            The name of the property to animate (e.g. <c>ColorRect.PropertyName.Color</c>).
-            </param>
-            
-            <param name="finalValue">The value the property should reach.</param>
-            
-            <param name="duration">How long, in seconds, the animation should take.</param>
-            
-            <returns>The current <see cref="T:GodotUtils.NodeTween"/> instance for chaining.</returns>
-        </member>
-        <member name="T:GodotUtils.NodeTween2D">
-            <summary>
-            Provides tweening functionality for Node2D properties.
-            </summary>
-        </member>
-        <member name="M:GodotUtils.NodeTween2D.#ctor(Godot.Node2D)">
-            <summary>
-            Provides tweening functionality for Node2D properties.
-            </summary>
-        </member>
-        <member name="T:GodotUtils.NodeTweenControl">
-            <summary>
-            Provides tweening functionality for Control properties.
-            </summary>
-        </member>
-        <member name="M:GodotUtils.NodeTweenControl.#ctor(Godot.Control)">
-            <summary>
-            Provides tweening functionality for Control properties.
-            </summary>
-        </member>
-        <member name="T:GodotUtils.NodeTweenProp">
-            <summary>
-            Provides an API for animating a property of a <see cref="T:Godot.Node"/> using Godot’s Tween system.
-            </summary>
-        </member>
-        <member name="M:GodotUtils.NodeTweenProp.#ctor(Godot.Node,System.String)">
-            <summary>
-            Provides an API for animating a property of a <see cref="T:Godot.Node"/> using Godot’s Tween system.
-            </summary>
-        </member>
-        <member name="M:GodotUtils.NodeTweenProp.Animate(Godot.Variant,System.Double)">
-            <summary>
-            Animates the specified property of the bound <see cref="T:Godot.Node"/>.
-            The tween uses a <see cref="F:Godot.Tween.TransitionType.Sine"/> transition by default.
-            
-            <code>
-            var tween = new <see cref="T:GodotUtils.NodeTweenProp"/>(this, ColorRect.PropertyName.Color);
-            tween.Animate(Colors.Red, 0.5);
-            tween.Animate(Colors.Green, 0.5);
-            tween.Animate(Colors.Blue, 0.5);
-            </code>
-            
-            </summary>
-            
-            <param name="finalValue">The value the property should reach.</param>
-            
-            <param name="duration">How long, in seconds, the animation should take.</param>
-            
-            <returns>The current <see cref="T:GodotUtils.NodeTweenProp"/> instance for chaining.</returns>
-        </member>
-        <member name="T:GodotUtils.ShaderTween">
-            <summary>
-            Provides an API for animating shader parameters of a <see cref="T:Godot.ShaderMaterial"/>
-            attached to a <see cref="T:Godot.Node2D"/> using Godot’s Tween system.
-            </summary>
-        </member>
-        <member name="M:GodotUtils.ShaderTween.#ctor(Godot.Node)">
-            <summary>
-            Creates a new <see cref="T:GodotUtils.ShaderTween"/> bound to the supplied <paramref name="node"/>.
-            The node must have a <see cref="T:Godot.ShaderMaterial"/> assigned to its <c>Material</c> property.
-            </summary>
-            <param name="node">The <see cref="T:Godot.Node2D"/> whose shader material will be animated.</param>
-        </member>
-        <member name="M:GodotUtils.ShaderTween.Animate(System.String,Godot.Variant,System.Double)">
-            <summary>
-            Animates the shader parameter identified by <paramref name="shaderParam"/>.
-            The tween uses a <see cref="F:Godot.Tween.TransitionType.Sine"/> transition by default.
-            
-            <code>
-            var tween = new <see cref="T:GodotUtils.ShaderTween"/>(this);
-            tween.Animate("blend_intensity", 1.0f, 2.0);
-            </code>
-            
-            </summary>
-            
-            <param name="shaderParam">
-            The name of the shader uniform to animate (e.g. <c>"blend_intensity"</c>).
-            </param>
-            
-            <param name="finalValue">The value the shader parameter should reach.</param>
-            
-            <param name="duration">How long, in seconds, the animation should take.</param>
-            
-            <returns>The current <see cref="T:GodotUtils.ShaderTween"/> instance for chaining.</returns>
-        </member>
-        <member name="T:GodotUtils.ShaderTweenProp">
-            <summary>
-            Fluent API for animating a *single* shader‑parameter of a <see cref="T:Godot.ShaderMaterial"/>
-            attached to a <see cref="T:Godot.Node2D"/>.  
-            The shader‑parameter name is supplied to the constructor, so the <c>Animate</c> method
-            only needs the target value and the duration.
-            </summary>
-        </member>
-        <member name="M:GodotUtils.ShaderTweenProp.#ctor(Godot.Node,System.String)">
-            <summary>
-            Creates a new <see cref="T:GodotUtils.ShaderTweenProp"/> bound to <paramref name="node"/>
-            and pre‑selects the shader‑parameter <paramref name="shaderParam"/> that will be animated.
-            </summary>
-            <param name="node">
-            The <see cref="T:Godot.Node2D"/> whose <c>Material</c> must be a <see cref="T:Godot.ShaderMaterial"/>.
-            </param>
-            <param name="shaderParam">
-            The name of the shader uniform to animate (e.g. <c>"blend_intensity"</c>).
-            </param>
-            <exception cref="T:System.Exception">
-            Thrown when the supplied <paramref name="node"/> does not have a <see cref="T:Godot.ShaderMaterial"/>
-            assigned to its <c>Material</c> property.
-            </exception>
-        </member>
-        <member name="M:GodotUtils.ShaderTweenProp.Animate(Godot.Variant,System.Double)">
-            <summary>
-            Animates the shader‑parameter supplied to the constructor.
-            The tween uses a <see cref="F:Godot.Tween.TransitionType.Sine"/> transition by default.
-            
-            <code>
-            var tween = new GodotShaderTweenProperty(this, "blend_intensity");
-            tween.Animate(1.0f, 2.0);
-            </code>
-            
-            </summary>
-            <param name="finalValue">The value the shader parameter should reach.</param>
-            <param name="duration">
-            How long, in seconds, the animation should take.
-            </param>
-            <returns>The current <see cref="T:GodotUtils.ShaderTweenProp"/> instance for chaining.</returns>
-        </member>
         <member name="M:GodotUtils.VectorUtils.Random">
             <summary>
             Returns a random vector between 0 and 1 (inclusive) for X and Y.
-            </summary>
-        </member>
-        <member name="T:Godot.OnImportEditorPlugin.MethodName">
-            <summary>
-            Cached StringNames for the methods contained in this class, for fast lookup.
-            </summary>
-        </member>
-        <member name="F:Godot.OnImportEditorPlugin.MethodName._GetSaveExtension">
-            <summary>
-            Cached name for the '_GetSaveExtension' method.
-            </summary>
-        </member>
-        <member name="F:Godot.OnImportEditorPlugin.MethodName._GetResourceType">
-            <summary>
-            Cached name for the '_GetResourceType' method.
-            </summary>
-        </member>
-        <member name="F:Godot.OnImportEditorPlugin.MethodName._GetImporterName">
-            <summary>
-            Cached name for the '_GetImporterName' method.
-            </summary>
-        </member>
-        <member name="F:Godot.OnImportEditorPlugin.MethodName._GetVisibleName">
-            <summary>
-            Cached name for the '_GetVisibleName' method.
-            </summary>
-        </member>
-        <member name="F:Godot.OnImportEditorPlugin.MethodName._GetRecognizedExtensions">
-            <summary>
-            Cached name for the '_GetRecognizedExtensions' method.
-            </summary>
-        </member>
-        <member name="F:Godot.OnImportEditorPlugin.MethodName._GetPriority">
-            <summary>
-            Cached name for the '_GetPriority' method.
-            </summary>
-        </member>
-        <member name="F:Godot.OnImportEditorPlugin.MethodName._GetImportOrder">
-            <summary>
-            Cached name for the '_GetImportOrder' method.
-            </summary>
-        </member>
-        <member name="F:Godot.OnImportEditorPlugin.MethodName._GetPresetCount">
-            <summary>
-            Cached name for the '_GetPresetCount' method.
-            </summary>
-        </member>
-        <member name="F:Godot.OnImportEditorPlugin.MethodName._GetPresetName">
-            <summary>
-            Cached name for the '_GetPresetName' method.
-            </summary>
-        </member>
-        <member name="F:Godot.OnImportEditorPlugin.MethodName._GetOptionVisibility">
-            <summary>
-            Cached name for the '_GetOptionVisibility' method.
-            </summary>
-        </member>
-        <member name="F:Godot.OnImportEditorPlugin.MethodName._GetImportOptions">
-            <summary>
-            Cached name for the '_GetImportOptions' method.
-            </summary>
-        </member>
-        <member name="F:Godot.OnImportEditorPlugin.MethodName._Import">
-            <summary>
-            Cached name for the '_Import' method.
-            </summary>
-        </member>
-        <member name="M:Godot.OnImportEditorPlugin.GetGodotMethodList">
-            <summary>
-            Get the method information for all the methods declared in this class.
-            This method is used by Godot to register the available methods in the editor.
-            Do not call this method.
-            </summary>
-        </member>
-        <member name="M:Godot.OnImportEditorPlugin.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.NativeVariantPtrArgs,Godot.NativeInterop.godot_variant@)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Godot.OnImportEditorPlugin.HasGodotClassMethod(Godot.NativeInterop.godot_string_name@)">
-            <inheritdoc/>
-        </member>
-        <member name="T:Godot.OnImportEditorPlugin.PropertyName">
-            <summary>
-            Cached StringNames for the properties and fields contained in this class, for fast lookup.
-            </summary>
-        </member>
-        <member name="M:Godot.OnImportEditorPlugin.SaveGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Godot.OnImportEditorPlugin.RestoreGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
-            <inheritdoc/>
-        </member>
-        <member name="T:Godot.OnImportEditorPlugin.SignalName">
-            <summary>
-            Cached StringNames for the signals contained in this class, for fast lookup.
             </summary>
         </member>
         <member name="T:System.Text.RegularExpressions.Generated.ScriptPath_0">
